@@ -10,7 +10,7 @@ _TODO: Add here section for must, should and other naming conventions_
 
 ```
 expr       = term_expr spaces ("+" term_expr | "-" term_expr)*
-term_expr  = prim_expr spaces ("*" prim_expr | "/" prim_expr | "%" mod_expr)*
+term_expr  = prim_expr spaces ("*" term_expr | "/" term_expr | "%" term_expr)*
 prim_expr  = spaces "(" expr ")"
            | spaces num_lit
 num_lit    = digit+
