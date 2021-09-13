@@ -9,13 +9,14 @@ _TODO: Add here section for must, should and other naming conventions_
 ## Syntax
 
 ```
-expr       = term_expr space* ("+" term_expr | "-" term_expr)*
-term_expr  = prim_expr space* ("*" prim_expr | "/" prim_expr | "%" mod_expr)*
-prim_expr  = space* "(" expr ")"
-           | space* num_lit
+expr       = term_expr spaces ("+" term_expr | "-" term_expr)*
+term_expr  = prim_expr spaces ("*" prim_expr | "/" prim_expr | "%" mod_expr)*
+prim_expr  = spaces "(" expr ")"
+           | spaces num_lit
 num_lit    = digit+
 digit      = "0".."9"
 space      = " " | "\t"
+spaces     = space*
 ```
 
 _TODO: Add here section for abstract syntax_
