@@ -10,7 +10,7 @@ _TODO: Add here section for must, should and other naming conventions_
 
 ```
 expr       = bitw_expr
-bitw_expr  = bitw_expr spaces ("&" bitw_expr | "|" bitw_expr | "^" bitw_expr | "~" bitw_expr | "<<" bitw_expr | ">>" bitw_expr)
+bitw_expr  = fact_expr spaces ("&" bitw_expr | "|" bitw_expr | "^" bitw_expr | "~" bitw_expr | "<<" bitw_expr | ">>" bitw_expr)
 fact_expr  = term_expr spaces ("+" fact_expr | "-" fact_expr)*
 term_expr  = prim_expr spaces ("*" term_expr | "/" term_expr | "%" term_expr)*
 prim_expr  = spaces "(" expr ")"
