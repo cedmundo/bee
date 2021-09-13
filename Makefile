@@ -1,7 +1,7 @@
 IDIR=include
 CC=cc
 CFLAGS=-I$(IDIR) -std=c11 -g -fno-common `pkg-config --cflags libjit`
-LDFLAGS=`pkg-config --libs libjit`
+LDFLAGS=`pkg-config --libs libjit` -Wl,-rpath -Wl,/usr/local/lib
 
 ODIR=obj
 BDIR=bin
