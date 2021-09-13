@@ -1,10 +1,10 @@
 IDIR=include
 CC=cc
-CFLAGS=-I$(IDIR)
+CFLAGS=-I$(IDIR) -std=c11 -g -fno-common `pkg-config --cflags libjit`
+LDFLAGS=`pkg-config --libs libjit`
 
 ODIR=obj
 BDIR=bin
-LIBS=-lm
 
 _DEPS = bee.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
@@ -18,7 +18,7 @@ $(ODIR)/%.o: %.c $(DEPS)
 
 bee: $(OBJ)
 	mkdir -p $(BDIR)
-	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
+	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LDFLAGS)
 
 test: bee
 	./tests/runall.sh "$(BDIR)/bee"
