@@ -20,6 +20,9 @@ bee: $(OBJ)
 	mkdir -p $(BDIR)
 	$(CC) -o $(BDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
+test: bee
+	./tests/runall.sh "$(BDIR)/bee"
+
 .PHONY: clean
 
 clean:
