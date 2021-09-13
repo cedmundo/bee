@@ -53,3 +53,7 @@ dkms.conf
 
 # Binary
 bin/
+
+# Vim temp files
+*.swp
+*.swo
