@@ -22,6 +22,12 @@ enum ast_node_type {
   AST_NODE_TYPE_BIT_XOR,
   AST_NODE_TYPE_BIT_LSHIFT,
   AST_NODE_TYPE_BIT_RSHIFT,
+  AST_NODE_TYPE_EQ,
+  AST_NODE_TYPE_NEQ,
+  AST_NODE_TYPE_LT,
+  AST_NODE_TYPE_LTE,
+  AST_NODE_TYPE_GT,
+  AST_NODE_TYPE_GTE,
 };
 
 struct ast_node {
@@ -76,6 +82,12 @@ void ast_node_print(struct ast_node *node, size_t depth) {
     "BIT XOR",
     "BIT LSHIFT",
     "BIT RSHIFT",
+    "EQ",
+    "NEQ",
+    "LT",
+    "LTE",
+    "GT",
+    "GTE",
   };
 
   if (node->type == AST_NODE_TYPE_I32) {
@@ -104,6 +116,8 @@ bool match(const char **rest, const char *seq) {
 }
 
 struct ast_node *parse_expr(const char *cur, const char **rest);
+struct ast_node *parse_comp_expr(const char *cur, const char **rest);
+struct ast_node *parse_ineq_expr(const char *cur, const char **rest);
 struct ast_node *parse_bitw_expr(const char *cur, const char **rest);
 struct ast_node *parse_bshf_expr(const char *cur, const char **rest);
 struct ast_node *parse_fact_expr(const char *cur, const char **rest);
@@ -115,7 +129,79 @@ bool parse_space(const char **rest);
 size_t parse_spaces(const char **rest);
 
 struct ast_node *parse_expr(const char *cur, const char **rest) {
-  return parse_bitw_expr(cur, rest);
+  return parse_comp_expr(cur, rest);
+}
+
+struct ast_node *parse_comp_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_ineq_expr(cur, rest);
+  for(;;) {
+    parse_spaces(rest);
+
+    if (match(rest, "==")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_EQ,
+          node,
+          parse_ineq_expr(cur, rest)
+      );
+      continue;
+    }
+
+    if (match(rest, "!=")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_NEQ,
+          node,
+          parse_ineq_expr(cur, rest)
+      );
+      continue;
+    }
+
+    return node;
+  }
+}
+
+struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_bitw_expr(cur, rest);
+  for(;;) {
+    parse_spaces(rest);
+
+    if (match(rest, ">=")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_GTE,
+          node,
+          parse_bitw_expr(cur, rest)
+      );
+      continue;
+    }
+
+    if (match(rest, "<=")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_LTE,
+          node,
+          parse_bitw_expr(cur, rest)
+      );
+      continue;
+    }
+
+    if (match(rest, ">")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_GT,
+          node,
+          parse_bitw_expr(cur, rest)
+      );
+      continue;
+    }
+
+    if (match(rest, "<")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_LT,
+          node,
+          parse_bitw_expr(cur, rest)
+      );
+      continue;
+    }
+
+    return node;
+  }
 }
 
 struct ast_node *parse_bitw_expr(const char *cur, const char **rest) {
@@ -335,6 +421,24 @@ jit_value_t compile_expr(jit_function_t f, struct ast_node *node) {
       break;
     case AST_NODE_TYPE_BIT_RSHIFT:
       value = jit_insn_shr(f, compile_expr(f, node->left), compile_expr(f, node->right));
+      break;
+    case AST_NODE_TYPE_EQ:
+      value = jit_insn_eq(f, compile_expr(f, node->left), compile_expr(f, node->right));
+      break;
+    case AST_NODE_TYPE_NEQ:
+      value = jit_insn_ne(f, compile_expr(f, node->left), compile_expr(f, node->right));
+      break;
+    case AST_NODE_TYPE_GT:
+      value = jit_insn_gt(f, compile_expr(f, node->left), compile_expr(f, node->right));
+      break;
+    case AST_NODE_TYPE_GTE:
+      value = jit_insn_ge(f, compile_expr(f, node->left), compile_expr(f, node->right));
+      break;
+    case AST_NODE_TYPE_LT:
+      value = jit_insn_lt(f, compile_expr(f, node->left), compile_expr(f, node->right));
+      break;
+    case AST_NODE_TYPE_LTE:
+      value = jit_insn_le(f, compile_expr(f, node->left), compile_expr(f, node->right));
       break;
   }
   return value;
