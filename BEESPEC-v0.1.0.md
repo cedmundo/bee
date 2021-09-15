@@ -9,7 +9,9 @@ _TODO: Add here section for must, should and other naming conventions_
 ## Syntax
 
 ```
-expr       = bitw_expr
+expr       = comp_expr
+comp_expr  = ineq_expr spaces ("==" ineq_expr | "!=" ineq_expr)*
+ineq_expr  = bitw_expr spaces (">" bitw_expr | ">=" bitw_expr | "<" bitw_expr | "<=" bitw_expr)*
 bitw_expr  = bshf_expr spaces ("&" bshf_expr | "|" bshf_expr | "^" bshf_expr)
 bshf_expr  = fact_expr spaces ("<<" fact_expr | ">>" fact_expr )*
 fact_expr  = term_expr spaces ("+" term_expr | "-" term_expr)*
