@@ -116,24 +116,24 @@ bool match(const char **rest, const char *seq) {
 }
 
 struct ast_node *parse_expr(const char *cur, const char **rest);
-struct ast_node *parse_comp_expr(const char *cur, const char **rest);
-struct ast_node *parse_ineq_expr(const char *cur, const char **rest);
-struct ast_node *parse_bitw_expr(const char *cur, const char **rest);
-struct ast_node *parse_bshf_expr(const char *cur, const char **rest);
-struct ast_node *parse_fact_expr(const char *cur, const char **rest);
+struct ast_node *parse_comparision_expr(const char *cur, const char **rest);
+struct ast_node *parse_inequality_expr(const char *cur, const char **rest);
+struct ast_node *parse_bitwise_expr(const char *cur, const char **rest);
+struct ast_node *parse_bitshift_expr(const char *cur, const char **rest);
+struct ast_node *parse_factor_expr(const char *cur, const char **rest);
 struct ast_node *parse_term_expr(const char *cur, const char **rest);
-struct ast_node *parse_prim_expr(const char *cur, const char **rest);
-struct ast_node *parse_num_lit(const char **rest);
+struct ast_node *parse_primary_expr(const char *cur, const char **rest);
+struct ast_node *parse_number_lit(const char **rest);
 bool parse_digit(const char **rest);
 bool parse_space(const char **rest);
 size_t parse_spaces(const char **rest);
 
 struct ast_node *parse_expr(const char *cur, const char **rest) {
-  return parse_comp_expr(cur, rest);
+  return parse_comparision_expr(cur, rest);
 }
 
-struct ast_node *parse_comp_expr(const char *cur, const char **rest) {
-  struct ast_node *node = parse_ineq_expr(cur, rest);
+struct ast_node *parse_comparision_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_inequality_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
 
@@ -141,7 +141,7 @@ struct ast_node *parse_comp_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_EQ,
           node,
-          parse_ineq_expr(cur, rest)
+          parse_inequality_expr(cur, rest)
       );
       continue;
     }
@@ -150,7 +150,7 @@ struct ast_node *parse_comp_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_NEQ,
           node,
-          parse_ineq_expr(cur, rest)
+          parse_inequality_expr(cur, rest)
       );
       continue;
     }
@@ -159,8 +159,8 @@ struct ast_node *parse_comp_expr(const char *cur, const char **rest) {
   }
 }
 
-struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
-  struct ast_node *node = parse_bitw_expr(cur, rest);
+struct ast_node *parse_inequality_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_bitwise_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
 
@@ -168,7 +168,7 @@ struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_GTE,
           node,
-          parse_bitw_expr(cur, rest)
+          parse_bitwise_expr(cur, rest)
       );
       continue;
     }
@@ -177,7 +177,7 @@ struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_LTE,
           node,
-          parse_bitw_expr(cur, rest)
+          parse_bitwise_expr(cur, rest)
       );
       continue;
     }
@@ -186,7 +186,7 @@ struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_GT,
           node,
-          parse_bitw_expr(cur, rest)
+          parse_bitwise_expr(cur, rest)
       );
       continue;
     }
@@ -195,7 +195,7 @@ struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_LT,
           node,
-          parse_bitw_expr(cur, rest)
+          parse_bitwise_expr(cur, rest)
       );
       continue;
     }
@@ -204,8 +204,8 @@ struct ast_node *parse_ineq_expr(const char *cur, const char **rest) {
   }
 }
 
-struct ast_node *parse_bitw_expr(const char *cur, const char **rest) {
-  struct ast_node *node = parse_bshf_expr(cur, rest);
+struct ast_node *parse_bitwise_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_bitshift_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
 
@@ -213,7 +213,7 @@ struct ast_node *parse_bitw_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_AND,
           node,
-          parse_bshf_expr(cur, rest)
+          parse_bitshift_expr(cur, rest)
       );
       continue;
     }
@@ -222,7 +222,7 @@ struct ast_node *parse_bitw_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_OR,
           node,
-          parse_bshf_expr(cur, rest)
+          parse_bitshift_expr(cur, rest)
       );
       continue;
     }
@@ -231,7 +231,7 @@ struct ast_node *parse_bitw_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_XOR,
           node,
-          parse_bshf_expr(cur, rest)
+          parse_bitshift_expr(cur, rest)
       );
       continue;
     }
@@ -241,8 +241,8 @@ struct ast_node *parse_bitw_expr(const char *cur, const char **rest) {
   }
 }
 
-struct ast_node *parse_bshf_expr(const char *cur, const char **rest) {
-  struct ast_node *node = parse_fact_expr(cur, rest);
+struct ast_node *parse_bitshift_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_factor_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
 
@@ -250,7 +250,7 @@ struct ast_node *parse_bshf_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_LSHIFT,
           node,
-          parse_fact_expr(cur, rest)
+          parse_factor_expr(cur, rest)
       );
       continue;
     }
@@ -259,7 +259,7 @@ struct ast_node *parse_bshf_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_RSHIFT,
           node,
-          parse_fact_expr(cur, rest)
+          parse_factor_expr(cur, rest)
       );
       continue;
     }
@@ -268,7 +268,7 @@ struct ast_node *parse_bshf_expr(const char *cur, const char **rest) {
   }
 }
 
-struct ast_node *parse_fact_expr(const char *cur, const char **rest) {
+struct ast_node *parse_factor_expr(const char *cur, const char **rest) {
   struct ast_node *node = parse_term_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
@@ -296,7 +296,7 @@ struct ast_node *parse_fact_expr(const char *cur, const char **rest) {
 }
 
 struct ast_node *parse_term_expr(const char *cur, const char **rest) {
-  struct ast_node *node = parse_prim_expr(cur, rest);
+  struct ast_node *node = parse_primary_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
 
@@ -331,7 +331,7 @@ struct ast_node *parse_term_expr(const char *cur, const char **rest) {
   }
 }
 
-struct ast_node *parse_prim_expr(const char *cur, const char **rest) {
+struct ast_node *parse_primary_expr(const char *cur, const char **rest) {
   parse_spaces(rest);
 
   if (match(rest, "(")) {
@@ -342,10 +342,10 @@ struct ast_node *parse_prim_expr(const char *cur, const char **rest) {
     return node;
   }
 
-  return parse_num_lit(rest);
+  return parse_number_lit(rest);
 }
 
-struct ast_node *parse_num_lit(const char **rest) {
+struct ast_node *parse_number_lit(const char **rest) {
   const char *base_digits = *rest;
   for (;parse_digit(rest););
 

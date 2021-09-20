@@ -9,19 +9,19 @@ _TODO: Add here section for must, should and other naming conventions_
 ## Syntax
 
 ```
-expr       = comp_expr
-comp_expr  = ineq_expr spaces ("==" ineq_expr | "!=" ineq_expr)*
-ineq_expr  = bitw_expr spaces (">" bitw_expr | ">=" bitw_expr | "<" bitw_expr | "<=" bitw_expr)*
-bitw_expr  = bshf_expr spaces ("&" bshf_expr | "|" bshf_expr | "^" bshf_expr)
-bshf_expr  = fact_expr spaces ("<<" fact_expr | ">>" fact_expr )*
-fact_expr  = term_expr spaces ("+" term_expr | "-" term_expr)*
-term_expr  = prim_expr spaces ("*" term_expr | "/" term_expr | "%" term_expr)*
-prim_expr  = spaces "(" expr ")"
-           | spaces num_lit
-num_lit    = digit+
-digit      = "0".."9"
-space      = " " | "\t"
-spaces     = space*
+expr              = comparision_expr
+comparision_expr  = inequality_expr spaces ("==" inequality_expr | "!=" inequality_expr)*
+inequality_expr   = bitwise_expr spaces (">" bitwise_expr | ">=" bitwise_expr | "<" bitwise_expr | "<=" bitwise_expr)*
+bitwise_expr      = bitshift_expr spaces ("&" bitshift_expr | "|" bitshift_expr | "^" bitshift_expr)
+bitshift_expr     = factor_expr spaces ("<<" factor_expr | ">>" factor_expr )*
+factor_expr       = term_expr spaces ("+" term_expr | "-" term_expr)*
+term_expr         = primary_expr spaces ("*" term_expr | "/" term_expr | "%" term_expr)*
+primary_expr      = spaces "(" expr ")"
+                  | spaces number_lit
+number_lit        = digit+
+digit             = "0".."9"
+space             = " " | "\t"
+spaces            = space*
 ```
 
 _TODO: Add here section for abstract syntax_
