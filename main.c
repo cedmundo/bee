@@ -1,5 +1,6 @@
 #include <jit/jit-common.h>
 #include <jit/jit-insn.h>
+#include <jit/jit-type.h>
 #include <jit/jit-util.h>
 #include <jit/jit-value.h>
 #include <stdio.h>
@@ -28,6 +29,8 @@ enum ast_node_type {
   AST_NODE_TYPE_LTE,
   AST_NODE_TYPE_GT,
   AST_NODE_TYPE_GTE,
+  AST_NODE_TYPE_LOG_AND,
+  AST_NODE_TYPE_LOG_OR,
 };
 
 struct ast_node {
@@ -88,6 +91,8 @@ void ast_node_print(struct ast_node *node, size_t depth) {
     "LTE",
     "GT",
     "GTE",
+    "LOGICAL AND",
+    "LOGICAL OR",
   };
 
   if (node->type == AST_NODE_TYPE_I32) {
@@ -116,6 +121,7 @@ bool match(const char **rest, const char *seq) {
 }
 
 struct ast_node *parse_expr(const char *cur, const char **rest);
+struct ast_node *parse_logical_expr(const char *cur, const char **rest);
 struct ast_node *parse_comparision_expr(const char *cur, const char **rest);
 struct ast_node *parse_inequality_expr(const char *cur, const char **rest);
 struct ast_node *parse_bitwise_expr(const char *cur, const char **rest);
@@ -129,7 +135,34 @@ bool parse_space(const char **rest);
 size_t parse_spaces(const char **rest);
 
 struct ast_node *parse_expr(const char *cur, const char **rest) {
-  return parse_comparision_expr(cur, rest);
+  return parse_logical_expr(cur, rest);
+}
+
+struct ast_node *parse_logical_expr(const char *cur, const char **rest) {
+  struct ast_node *node = parse_comparision_expr(cur, rest);
+  for(;;) {
+    parse_spaces(rest);
+
+    if (match(rest, "||")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_LOG_OR,
+          node,
+          parse_comparision_expr(cur, rest)
+      );
+      continue;
+    }
+
+    if (match(rest, "&&")) {
+      node = ast_node_new_binary(
+          AST_NODE_TYPE_LOG_AND,
+          node,
+          parse_comparision_expr(cur, rest)
+      );
+      continue;
+    }
+
+    return node;
+  }
 }
 
 struct ast_node *parse_comparision_expr(const char *cur, const char **rest) {
@@ -209,7 +242,7 @@ struct ast_node *parse_bitwise_expr(const char *cur, const char **rest) {
   for(;;) {
     parse_spaces(rest);
 
-    if (match(rest, "&")) {
+    if (match(rest, "& ")) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_AND,
           node,
@@ -218,7 +251,7 @@ struct ast_node *parse_bitwise_expr(const char *cur, const char **rest) {
       continue;
     }
 
-    if (match(rest, "|")) {
+    if (match(rest, "| ")) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_BIT_OR,
           node,
@@ -440,6 +473,38 @@ jit_value_t compile_expr(jit_function_t f, struct ast_node *node) {
     case AST_NODE_TYPE_LTE:
       value = jit_insn_le(f, compile_expr(f, node->left), compile_expr(f, node->right));
       break;
+    case AST_NODE_TYPE_LOG_AND:
+      {
+        jit_value_t tmp = jit_value_create(f, jit_type_sys_bool);
+        jit_label_t a_label = jit_label_undefined;
+        jit_label_t b_label = jit_label_undefined;
+        jit_insn_branch_if(f, compile_expr(f, node->left), &a_label);
+        jit_insn_store(f, tmp, jit_value_create_nint_constant(f, jit_type_sys_bool, 0));
+        jit_insn_branch(f, &b_label);
+
+        jit_insn_label(f, &a_label);
+        jit_insn_store(f, tmp, compile_expr(f, node->right));
+
+        jit_insn_label(f, &b_label);
+        value = jit_insn_load(f, tmp);
+        break;
+      }
+    case AST_NODE_TYPE_LOG_OR:
+      {
+        jit_value_t tmp = jit_value_create(f, jit_type_sys_bool);
+        jit_label_t a_label = jit_label_undefined;
+        jit_label_t b_label = jit_label_undefined;
+        jit_insn_branch_if_not(f, compile_expr(f, node->left), &a_label);
+        jit_insn_store(f, tmp, jit_value_create_nint_constant(f, jit_type_sys_bool, 1));
+        jit_insn_branch(f, &b_label);
+
+        jit_insn_label(f, &a_label);
+        jit_insn_store(f, tmp, compile_expr(f, node->right));
+
+        jit_insn_label(f, &b_label);
+        value = jit_insn_load(f, tmp);
+        break;
+      }
   }
   return value;
 }
