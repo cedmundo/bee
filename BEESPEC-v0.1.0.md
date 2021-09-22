@@ -1,4 +1,4 @@
-# BEESPEC
+# Bee language specification
 
 Version 0.1.0 - Road to cellophane.
 
@@ -10,8 +10,8 @@ _TODO: Add here section for must, should and other naming conventions_
 
 ```
 expr              = logical_expr
-logical_expr      = comparision_expr spaces ("&&" comparision_expr | "||" comparision_expr)
-comparision_expr  = inequality_expr spaces ("==" inequality_expr | "!=" inequality_expr)*
+logical_expr      = comparision_expr spaces ("&&" comparison_expr | "||" comparison_expr)
+comparison_expr   = inequality_expr spaces ("==" inequality_expr | "!=" inequality_expr)*
 inequality_expr   = bitwise_expr spaces (">" bitwise_expr | ">=" bitwise_expr | "<" bitwise_expr | "<=" bitwise_expr)*
 bitwise_expr      = bitshift_expr spaces ("&" bitshift_expr | "|" bitshift_expr | "^" bitshift_expr)
 bitshift_expr     = factor_expr spaces ("<<" factor_expr | ">>" factor_expr )*
@@ -26,7 +26,7 @@ spaces            = space*
 ```
 
 _TODO: Add here section for abstract syntax_
-_TODO: Add here section for sematics_
+_TODO: Add here section for semantics_
 
 ## Execution
 
