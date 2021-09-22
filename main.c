@@ -122,7 +122,7 @@ bool match(const char **rest, const char *seq) {
 
 struct ast_node *parse_expr(const char *cur, const char **rest);
 struct ast_node *parse_logical_expr(const char *cur, const char **rest);
-struct ast_node *parse_comparision_expr(const char *cur, const char **rest);
+struct ast_node *parse_comparison_expr(const char *cur, const char **rest);
 struct ast_node *parse_inequality_expr(const char *cur, const char **rest);
 struct ast_node *parse_bitwise_expr(const char *cur, const char **rest);
 struct ast_node *parse_bitshift_expr(const char *cur, const char **rest);
@@ -139,7 +139,7 @@ struct ast_node *parse_expr(const char *cur, const char **rest) {
 }
 
 struct ast_node *parse_logical_expr(const char *cur, const char **rest) {
-  struct ast_node *node = parse_comparision_expr(cur, rest);
+  struct ast_node *node = parse_comparison_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
 
@@ -147,7 +147,7 @@ struct ast_node *parse_logical_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_LOG_OR,
           node,
-          parse_comparision_expr(cur, rest)
+          parse_comparison_expr(cur, rest)
       );
       continue;
     }
@@ -156,7 +156,7 @@ struct ast_node *parse_logical_expr(const char *cur, const char **rest) {
       node = ast_node_new_binary(
           AST_NODE_TYPE_LOG_AND,
           node,
-          parse_comparision_expr(cur, rest)
+          parse_comparison_expr(cur, rest)
       );
       continue;
     }
@@ -165,7 +165,7 @@ struct ast_node *parse_logical_expr(const char *cur, const char **rest) {
   }
 }
 
-struct ast_node *parse_comparision_expr(const char *cur, const char **rest) {
+struct ast_node *parse_comparison_expr(const char *cur, const char **rest) {
   struct ast_node *node = parse_inequality_expr(cur, rest);
   for(;;) {
     parse_spaces(rest);
@@ -390,7 +390,7 @@ struct ast_node *parse_number_lit(const char **rest) {
   struct ast_node *node = ast_node_new();
   node->type = AST_NODE_TYPE_I32;
   node->as_i32 = 0;
-  node->as_i32 = atoi(base_digits);
+  node->as_i32 = (int32_t)strtol(base_digits, NULL, 10);
   return node;
 }
 

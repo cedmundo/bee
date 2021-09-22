@@ -1,5 +1,5 @@
 IDIR=include
-CC=cc
+CC=gcc
 CFLAGS=-I$(IDIR) -std=c11 -g -fno-common `pkg-config --cflags libjit`
 LDFLAGS=`pkg-config --libs libjit` -Wl,-rpath -Wl,/usr/local/lib
 
@@ -23,7 +23,9 @@ bee: $(OBJ)
 test: bee
 	./tests/runall.sh "$(BDIR)/bee"
 
-.PHONY: clean
-
 clean:
 	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
+
+all: test
+
+.PHONY: clean all
