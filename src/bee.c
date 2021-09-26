@@ -295,7 +295,7 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_MUL,
                     node,
-                    bee_parse_term_expr(cur, rest)
+                    bee_parse_primary_expr(cur, rest)
             );
             continue;
         }
@@ -304,7 +304,7 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_DIV,
                     node,
-                    bee_parse_term_expr(cur, rest)
+                    bee_parse_primary_expr(cur, rest)
             );
             continue;
         }
@@ -313,7 +313,7 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_MOD,
                     node,
-                    bee_parse_term_expr(cur, rest)
+                    bee_parse_primary_expr(cur, rest)
             );
             continue;
         }

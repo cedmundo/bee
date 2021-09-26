@@ -35,10 +35,9 @@ struct bee_ast_node {
 };
 
 struct bee_ast_node *bee_ast_node_new();
-void bee_ast_node_free(struct bee_ast_node *node);
-jit_value_t bee_compile_expr(jit_function_t f, struct bee_ast_node *node);
-
 void bee_ast_node_print(struct bee_ast_node *node, size_t depth);
+void bee_ast_node_free(struct bee_ast_node *node);
+
 struct bee_ast_node *bee_parse_expr(const char *cur, const char **rest);
 struct bee_ast_node *bee_parse_logical_expr(const char *cur, const char **rest);
 struct bee_ast_node *bee_parse_comparison_expr(const char *cur, const char **rest);
@@ -49,8 +48,9 @@ struct bee_ast_node *bee_parse_factor_expr(const char *cur, const char **rest);
 struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest);
 struct bee_ast_node *bee_parse_primary_expr(const char *cur, const char **rest);
 struct bee_ast_node *bee_parse_number_lit(const char **rest);
+size_t bee_parse_spaces(const char **rest);
 bool bee_parse_digit(const char **rest);
 bool bee_parse_space(const char **rest);
-size_t bee_parse_spaces(const char **rest);
 
+jit_value_t bee_compile_expr(jit_function_t f, struct bee_ast_node *node);
 #endif /* BEE_H */
