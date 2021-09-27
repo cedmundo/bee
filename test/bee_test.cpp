@@ -240,3 +240,420 @@ TEST(PARSER, PARSE_TERM_EXPR_INVERSE_CHAIN_FINE) {
     assert_is_number_ast_node(right_node->right, true, 5);
     bee_ast_node_free(actual_node);
 }
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_FACTOR_EXPR_FINE) {
+    const char *add_expr = "3 + 4";
+    const char *head = add_expr;
+
+    struct bee_ast_node *actual_node = bee_parse_factor_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 3);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+
+    const char *sub_expr = "4 - 5";
+    head = sub_expr;
+
+    actual_node = bee_parse_factor_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_FACTOR_EXPR_CHAIN_FINE) {
+    const char *expr = "5 + 4 - 3";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_factor_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->right, true, 3);
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 5);
+    assert_is_number_ast_node(left_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_FACTOR_EXPR_INVERSE_CHAIN_FINE) {
+    const char *expr = "5 + (4 - 3)";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_factor_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->left, true, 5);
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 4);
+    assert_is_number_ast_node(right_node->right, true, 3);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BITSHIFT_EXPR_FINE) {
+    const char *ls_expr = "3 << 4";
+    const char *head = ls_expr;
+
+    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_LSHIFT, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 3);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+
+    const char *rs_expr = "4 >> 5";
+    head = rs_expr;
+
+    actual_node = bee_parse_bitshift_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_RSHIFT, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BITSHIFT_EXPR_CHAIN_FINE) {
+    const char *expr = "5 >> 4 << 3";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_LSHIFT, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->right, true, 3);
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_RSHIFT, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 5);
+    assert_is_number_ast_node(left_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BITSHIFT_EXPR_INVERSE_CHAIN_FINE) {
+    const char *expr = "5 >> (4 << 3)";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_RSHIFT, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->left, true, 5);
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_LSHIFT, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 4);
+    assert_is_number_ast_node(right_node->right, true, 3);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BITWISE_EXPR_FINE) {
+    const char *or_expr = "3 | 4";
+    const char *head = or_expr;
+
+    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_OR, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 3);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+
+    const char *and_expr = "4 & 5";
+    head = and_expr;
+
+    actual_node = bee_parse_bitwise_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_AND, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+
+    const char *xor_expr = "4 ^ 5";
+    head = xor_expr;
+
+    actual_node = bee_parse_bitwise_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_XOR, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BITWISE_EXPR_CHAIN_FINE) {
+    const char *expr = "5 | 4 & 3 ^ 2";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_XOR, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->right, true, 2);
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_AND, left_node->type);
+    assert_is_number_ast_node(left_node->right, true, 3);
+
+    left_node = left_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_OR, left_node->type);
+    assert_is_number_ast_node(left_node->right, true, 4);
+    assert_is_number_ast_node(left_node->left, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BITWISE_EXPR_INVERSE_CHAIN_FINE) {
+    const char *expr = "5 | (4 & (3 ^ 2))";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_OR, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->left, true, 5);
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_AND, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 4);
+
+    right_node = right_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_XOR, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 3);
+    assert_is_number_ast_node(right_node->right, true, 2);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INEQUALITY_EXPR_FINE) {
+    const char *ge_expr = "3 >= 4";
+    const char *head = ge_expr;
+
+    struct bee_ast_node *actual_node = bee_parse_inequality_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GTE, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 3);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+
+    const char *le_expr = "4 <= 5";
+    head = le_expr;
+
+    actual_node = bee_parse_inequality_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LTE, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+
+    const char *gt_expr = "4 > 5";
+    head = gt_expr;
+
+    actual_node = bee_parse_inequality_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GT, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+
+    const char *lt_expr = "4 < 5";
+    head = lt_expr;
+
+    actual_node = bee_parse_inequality_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LT, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INEQUALITY_EXPR_CHAIN_FINE) {
+    const char *expr = "5 >= 4 <= 3 > 2 < 1";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_inequality_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LT, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->right, true, 1);
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GT, left_node->type);
+    assert_is_number_ast_node(left_node->right, true, 2);
+
+    left_node = left_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LTE, left_node->type);
+    assert_is_number_ast_node(left_node->right, true, 3);
+
+    left_node = left_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GTE, left_node->type);
+    assert_is_number_ast_node(left_node->right, true, 4);
+    assert_is_number_ast_node(left_node->left, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INEQUALITY_EXPR_INVERSE_CHAIN_FINE) {
+    const char *expr = "5 >= (4 <= (3 > (2 < 1)))";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_inequality_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GTE, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->left, true, 5);
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LTE, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 4);
+
+    right_node = right_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GT, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 3);
+
+    right_node = right_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LT, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 2);
+    assert_is_number_ast_node(right_node->right, true, 1);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_COMPARISON_EXPR_FINE) {
+    const char *neq_expr = "3 != 4";
+    const char *head = neq_expr;
+
+    struct bee_ast_node *actual_node = bee_parse_comparison_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_NEQ, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 3);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+
+    const char *eq_expr = "4 == 5";
+    head = eq_expr;
+
+    actual_node = bee_parse_comparison_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_EQ, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_COMPARISON_EXPR_CHAIN_FINE) {
+    const char *expr = "5 != 4 == 3";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_comparison_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_EQ, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->right, true, 3);
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_NEQ, left_node->type);
+    assert_is_number_ast_node(left_node->right, true, 4);
+    assert_is_number_ast_node(left_node->left, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_COMPARISON_EXPR_INVERSE_CHAIN_FINE) {
+    const char *expr = "5 != (4 == 3)";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_comparison_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_NEQ, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->left, true, 5);
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_EQ, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 4);
+    assert_is_number_ast_node(right_node->right, true, 3);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_LOGICAL_EXPR_FINE) {
+    const char *or_expr = "3 || 4";
+    const char *head = or_expr;
+
+    struct bee_ast_node *actual_node = bee_parse_logical_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 3);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+
+    const char *and_expr = "4 && 5";
+    head = and_expr;
+
+    actual_node = bee_parse_logical_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 4);
+    assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_LOGICAL_EXPR_CHAIN_FINE) {
+    const char *expr = "5 || 4 && 3";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_logical_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->right, true, 3);
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 5);
+    assert_is_number_ast_node(left_node->right, true, 4);
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_LOGICAL_EXPR_INVERSE_CHAIN_FINE) {
+    const char *expr = "5 || (4 && 3)";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_logical_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, actual_node->type);
+
+    assert_is_number_ast_node(actual_node->left, true, 5);
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 4);
+    assert_is_number_ast_node(right_node->right, true, 3);
+    bee_ast_node_free(actual_node);
+}
