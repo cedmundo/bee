@@ -469,6 +469,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_FINE) {
     ASSERT_EQ(BEE_AST_NODE_TYPE_GT, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
     assert_is_number_ast_node(actual_node->right, true, 5);
+    bee_ast_node_free(actual_node);
 
     const char *lt_expr = "4 < 5";
     head = lt_expr;
