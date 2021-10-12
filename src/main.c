@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
   jit_function_apply(function, NULL, &result);
 
   printf("%d", (int)result);
-    bee_ast_node_free(node);
+  bee_ast_node_free(node);
   fflush(stdout);
   return 0;
 }

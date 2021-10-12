@@ -658,3 +658,100 @@ TEST(PARSER, PARSE_LOGICAL_EXPR_INVERSE_CHAIN_FINE) {
     assert_is_number_ast_node(right_node->right, true, 3);
     bee_ast_node_free(actual_node);
 }
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_EQ_AND_NEQ) {
+    const char *expr = "1 == 2 && 3 != 4";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, actual_node->type);
+
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_EQ, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 1);
+    assert_is_number_ast_node(left_node->right, true, 2);
+
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_NEQ, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 3);
+    assert_is_number_ast_node(right_node->right, true, 4);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_ADD_MUL_DIV) {
+    const char *expr = "1 * 2 + 3 / 4";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
+
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_MUL, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 1);
+    assert_is_number_ast_node(left_node->right, true, 2);
+
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_DIV, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 3);
+    assert_is_number_ast_node(right_node->right, true, 4);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_MUL_ADD_SUB) {
+    const char *expr = "1 + 2 * 3 - 4";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, actual_node->type);
+    assert_is_number_ast_node(actual_node->right, true, 4);
+
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 1);
+
+    struct bee_ast_node *right_node = left_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_MUL, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 2);
+    assert_is_number_ast_node(right_node->right, true, 3);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_LT_OR_GT) {
+    const char *expr = "1 < 2 || 3 > 4";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, actual_node->type);
+
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LT, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 1);
+    assert_is_number_ast_node(left_node->right, true, 2);
+
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_GT, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 3);
+    assert_is_number_ast_node(right_node->right, true, 4);
+
+    bee_ast_node_free(actual_node);
+}
+
