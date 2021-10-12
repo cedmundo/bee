@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   }
 
   const char *cpy = src;
-  struct bee_ast_node *node = bee_parse_expr(src, &cpy);
+  struct bee_ast_node *node = bee_parse_expr(&cpy);
   if (node == NULL) {
     node = bee_ast_node_new();
     node->type = BEE_AST_NODE_TYPE_I32;

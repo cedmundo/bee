@@ -92,12 +92,12 @@ bool match(const char **rest, const char *seq) {
     return false;
 }
 
-struct bee_ast_node *bee_parse_expr(const char *cur, const char **rest) {
-    return bee_parse_logical_expr(cur, rest);
+struct bee_ast_node *bee_parse_expr(const char **rest) {
+    return bee_parse_logical_expr(rest);
 }
 
-struct bee_ast_node *bee_parse_logical_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_comparison_expr(cur, rest);
+struct bee_ast_node *bee_parse_logical_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_comparison_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -105,7 +105,7 @@ struct bee_ast_node *bee_parse_logical_expr(const char *cur, const char **rest) 
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_LOG_OR,
                     node,
-                    bee_parse_comparison_expr(cur, rest)
+                    bee_parse_comparison_expr(rest)
             );
             continue;
         }
@@ -114,7 +114,7 @@ struct bee_ast_node *bee_parse_logical_expr(const char *cur, const char **rest) 
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_LOG_AND,
                     node,
-                    bee_parse_comparison_expr(cur, rest)
+                    bee_parse_comparison_expr(rest)
             );
             continue;
         }
@@ -123,8 +123,8 @@ struct bee_ast_node *bee_parse_logical_expr(const char *cur, const char **rest) 
     }
 }
 
-struct bee_ast_node *bee_parse_comparison_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_inequality_expr(cur, rest);
+struct bee_ast_node *bee_parse_comparison_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_inequality_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -132,7 +132,7 @@ struct bee_ast_node *bee_parse_comparison_expr(const char *cur, const char **res
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_EQ,
                     node,
-                    bee_parse_inequality_expr(cur, rest)
+                    bee_parse_inequality_expr(rest)
             );
             continue;
         }
@@ -141,7 +141,7 @@ struct bee_ast_node *bee_parse_comparison_expr(const char *cur, const char **res
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_NEQ,
                     node,
-                    bee_parse_inequality_expr(cur, rest)
+                    bee_parse_inequality_expr(rest)
             );
             continue;
         }
@@ -150,8 +150,8 @@ struct bee_ast_node *bee_parse_comparison_expr(const char *cur, const char **res
     }
 }
 
-struct bee_ast_node *bee_parse_inequality_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_bitwise_expr(cur, rest);
+struct bee_ast_node *bee_parse_inequality_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_bitwise_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -159,7 +159,7 @@ struct bee_ast_node *bee_parse_inequality_expr(const char *cur, const char **res
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_GTE,
                     node,
-                    bee_parse_bitwise_expr(cur, rest)
+                    bee_parse_bitwise_expr(rest)
             );
             continue;
         }
@@ -168,7 +168,7 @@ struct bee_ast_node *bee_parse_inequality_expr(const char *cur, const char **res
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_LTE,
                     node,
-                    bee_parse_bitwise_expr(cur, rest)
+                    bee_parse_bitwise_expr(rest)
             );
             continue;
         }
@@ -177,7 +177,7 @@ struct bee_ast_node *bee_parse_inequality_expr(const char *cur, const char **res
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_GT,
                     node,
-                    bee_parse_bitwise_expr(cur, rest)
+                    bee_parse_bitwise_expr(rest)
             );
             continue;
         }
@@ -186,7 +186,7 @@ struct bee_ast_node *bee_parse_inequality_expr(const char *cur, const char **res
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_LT,
                     node,
-                    bee_parse_bitwise_expr(cur, rest)
+                    bee_parse_bitwise_expr(rest)
             );
             continue;
         }
@@ -195,8 +195,8 @@ struct bee_ast_node *bee_parse_inequality_expr(const char *cur, const char **res
     }
 }
 
-struct bee_ast_node *bee_parse_bitwise_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_bitshift_expr(cur, rest);
+struct bee_ast_node *bee_parse_bitwise_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_bitshift_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -204,7 +204,7 @@ struct bee_ast_node *bee_parse_bitwise_expr(const char *cur, const char **rest) 
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_BIT_AND,
                     node,
-                    bee_parse_bitshift_expr(cur, rest)
+                    bee_parse_bitshift_expr(rest)
             );
             continue;
         }
@@ -213,7 +213,7 @@ struct bee_ast_node *bee_parse_bitwise_expr(const char *cur, const char **rest) 
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_BIT_OR,
                     node,
-                    bee_parse_bitshift_expr(cur, rest)
+                    bee_parse_bitshift_expr(rest)
             );
             continue;
         }
@@ -222,7 +222,7 @@ struct bee_ast_node *bee_parse_bitwise_expr(const char *cur, const char **rest) 
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_BIT_XOR,
                     node,
-                    bee_parse_bitshift_expr(cur, rest)
+                    bee_parse_bitshift_expr(rest)
             );
             continue;
         }
@@ -232,8 +232,8 @@ struct bee_ast_node *bee_parse_bitwise_expr(const char *cur, const char **rest) 
     }
 }
 
-struct bee_ast_node *bee_parse_bitshift_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_factor_expr(cur, rest);
+struct bee_ast_node *bee_parse_bitshift_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_factor_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -241,7 +241,7 @@ struct bee_ast_node *bee_parse_bitshift_expr(const char *cur, const char **rest)
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_BIT_LSHIFT,
                     node,
-                    bee_parse_factor_expr(cur, rest)
+                    bee_parse_factor_expr(rest)
             );
             continue;
         }
@@ -250,7 +250,7 @@ struct bee_ast_node *bee_parse_bitshift_expr(const char *cur, const char **rest)
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_BIT_RSHIFT,
                     node,
-                    bee_parse_factor_expr(cur, rest)
+                    bee_parse_factor_expr(rest)
             );
             continue;
         }
@@ -259,8 +259,8 @@ struct bee_ast_node *bee_parse_bitshift_expr(const char *cur, const char **rest)
     }
 }
 
-struct bee_ast_node *bee_parse_factor_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_term_expr(cur, rest);
+struct bee_ast_node *bee_parse_factor_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_term_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -268,7 +268,7 @@ struct bee_ast_node *bee_parse_factor_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_SUB,
                     node,
-                    bee_parse_term_expr(cur, rest)
+                    bee_parse_term_expr(rest)
             );
             continue;
         }
@@ -277,7 +277,7 @@ struct bee_ast_node *bee_parse_factor_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_ADD,
                     node,
-                    bee_parse_term_expr(cur, rest)
+                    bee_parse_term_expr(rest)
             );
             continue;
         }
@@ -286,8 +286,8 @@ struct bee_ast_node *bee_parse_factor_expr(const char *cur, const char **rest) {
     }
 }
 
-struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
-    struct bee_ast_node *node = bee_parse_primary_expr(cur, rest);
+struct bee_ast_node *bee_parse_term_expr(const char **rest) {
+    struct bee_ast_node *node = bee_parse_primary_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -295,7 +295,7 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_MUL,
                     node,
-                    bee_parse_primary_expr(cur, rest)
+                    bee_parse_primary_expr(rest)
             );
             continue;
         }
@@ -304,7 +304,7 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_DIV,
                     node,
-                    bee_parse_primary_expr(cur, rest)
+                    bee_parse_primary_expr(rest)
             );
             continue;
         }
@@ -313,7 +313,7 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_MOD,
                     node,
-                    bee_parse_primary_expr(cur, rest)
+                    bee_parse_primary_expr(rest)
             );
             continue;
         }
@@ -322,11 +322,11 @@ struct bee_ast_node *bee_parse_term_expr(const char *cur, const char **rest) {
     }
 }
 
-struct bee_ast_node *bee_parse_primary_expr(const char *cur, const char **rest) {
+struct bee_ast_node *bee_parse_primary_expr(const char **rest) {
     bee_parse_spaces(rest);
 
     if (match(rest, "(")) {
-        struct bee_ast_node *node = bee_parse_expr(cur, rest);
+        struct bee_ast_node *node = bee_parse_expr(rest);
         if (!match(rest, ")")) {
             printf("error: expecting an ')', found: '%c'\n", **rest);
         }

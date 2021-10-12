@@ -137,7 +137,7 @@ TEST(PARSER, PARSE_NUMBER_LITERAL_NO_NUMBER) {
 TEST(PARSER, PARSE_PRIMARY_EXPR_FINE) {
     const char *between_parenthesis_expr = "(11)";
     const char *head = between_parenthesis_expr;
-    struct bee_ast_node *actual_node = bee_parse_primary_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_primary_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_I32, actual_node->type);
     int32_t expected_value = 11;
@@ -146,7 +146,7 @@ TEST(PARSER, PARSE_PRIMARY_EXPR_FINE) {
 
     const char *numeric_expr = "11";
     head = numeric_expr;
-    actual_node = bee_parse_primary_expr(head, &head);
+    actual_node = bee_parse_primary_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_I32, actual_node->type);
     EXPECT_EQ(expected_value, actual_node->as_i32);
@@ -158,7 +158,7 @@ TEST(PARSER, PARSE_PRIMARY_EXPR_NO_PRIMARY) {
     const char *not_a_primary = "%1";
     const char *head = not_a_primary;
 
-    struct bee_ast_node *actual_node = bee_parse_primary_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_primary_expr(&head);
     ASSERT_EQ(nullptr, actual_node);
 }
 
@@ -167,7 +167,7 @@ TEST(PARSER, PARSE_TERM_EXPR_FINE) {
     const char *mul_between_two_numbers = "2 * 3";
     const char *head = mul_between_two_numbers;
 
-    struct bee_ast_node *actual_node = bee_parse_term_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_term_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_MUL, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 2);
@@ -176,7 +176,7 @@ TEST(PARSER, PARSE_TERM_EXPR_FINE) {
 
     const char *div_between_two_numbers = "4 / 5";
     head = div_between_two_numbers;
-    actual_node = bee_parse_term_expr(head, &head);
+    actual_node = bee_parse_term_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_DIV, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -185,7 +185,7 @@ TEST(PARSER, PARSE_TERM_EXPR_FINE) {
 
     const char *rem_between_two_numbers = "6 % 7";
     head = rem_between_two_numbers;
-    actual_node = bee_parse_term_expr(head, &head);
+    actual_node = bee_parse_term_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_MOD, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 6);
@@ -198,7 +198,7 @@ TEST(PARSER, PARSE_TERM_EXPR_CHAIN_FINE) {
     const char *expr = "2 * 3 / 4 % 5";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_term_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_term_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_MOD, actual_node->type);
 
@@ -222,7 +222,7 @@ TEST(PARSER, PARSE_TERM_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "2 * (3 / (4 % 5))";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_term_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_term_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_MUL, actual_node->type);
 
@@ -246,7 +246,7 @@ TEST(PARSER, PARSE_FACTOR_EXPR_FINE) {
     const char *add_expr = "3 + 4";
     const char *head = add_expr;
 
-    struct bee_ast_node *actual_node = bee_parse_factor_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_factor_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 3);
@@ -256,7 +256,7 @@ TEST(PARSER, PARSE_FACTOR_EXPR_FINE) {
     const char *sub_expr = "4 - 5";
     head = sub_expr;
 
-    actual_node = bee_parse_factor_expr(head, &head);
+    actual_node = bee_parse_factor_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -269,7 +269,7 @@ TEST(PARSER, PARSE_FACTOR_EXPR_CHAIN_FINE) {
     const char *expr = "5 + 4 - 3";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_factor_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_factor_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, actual_node->type);
 
@@ -287,7 +287,7 @@ TEST(PARSER, PARSE_FACTOR_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "5 + (4 - 3)";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_factor_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_factor_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
 
@@ -305,7 +305,7 @@ TEST(PARSER, PARSE_BITSHIFT_EXPR_FINE) {
     const char *ls_expr = "3 << 4";
     const char *head = ls_expr;
 
-    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_LSHIFT, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 3);
@@ -315,7 +315,7 @@ TEST(PARSER, PARSE_BITSHIFT_EXPR_FINE) {
     const char *rs_expr = "4 >> 5";
     head = rs_expr;
 
-    actual_node = bee_parse_bitshift_expr(head, &head);
+    actual_node = bee_parse_bitshift_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_RSHIFT, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -328,7 +328,7 @@ TEST(PARSER, PARSE_BITSHIFT_EXPR_CHAIN_FINE) {
     const char *expr = "5 >> 4 << 3";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_LSHIFT, actual_node->type);
 
@@ -346,7 +346,7 @@ TEST(PARSER, PARSE_BITSHIFT_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "5 >> (4 << 3)";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_bitshift_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_RSHIFT, actual_node->type);
 
@@ -364,7 +364,7 @@ TEST(PARSER, PARSE_BITWISE_EXPR_FINE) {
     const char *or_expr = "3 | 4";
     const char *head = or_expr;
 
-    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_OR, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 3);
@@ -374,7 +374,7 @@ TEST(PARSER, PARSE_BITWISE_EXPR_FINE) {
     const char *and_expr = "4 & 5";
     head = and_expr;
 
-    actual_node = bee_parse_bitwise_expr(head, &head);
+    actual_node = bee_parse_bitwise_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_AND, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -384,7 +384,7 @@ TEST(PARSER, PARSE_BITWISE_EXPR_FINE) {
     const char *xor_expr = "4 ^ 5";
     head = xor_expr;
 
-    actual_node = bee_parse_bitwise_expr(head, &head);
+    actual_node = bee_parse_bitwise_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_XOR, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -397,7 +397,7 @@ TEST(PARSER, PARSE_BITWISE_EXPR_CHAIN_FINE) {
     const char *expr = "5 | 4 & 3 ^ 2";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_XOR, actual_node->type);
 
@@ -420,7 +420,7 @@ TEST(PARSER, PARSE_BITWISE_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "5 | (4 & (3 ^ 2))";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_bitwise_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_OR, actual_node->type);
 
@@ -444,7 +444,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_FINE) {
     const char *ge_expr = "3 >= 4";
     const char *head = ge_expr;
 
-    struct bee_ast_node *actual_node = bee_parse_inequality_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_inequality_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_GTE, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 3);
@@ -454,7 +454,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_FINE) {
     const char *le_expr = "4 <= 5";
     head = le_expr;
 
-    actual_node = bee_parse_inequality_expr(head, &head);
+    actual_node = bee_parse_inequality_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LTE, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -464,7 +464,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_FINE) {
     const char *gt_expr = "4 > 5";
     head = gt_expr;
 
-    actual_node = bee_parse_inequality_expr(head, &head);
+    actual_node = bee_parse_inequality_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_GT, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -474,7 +474,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_FINE) {
     const char *lt_expr = "4 < 5";
     head = lt_expr;
 
-    actual_node = bee_parse_inequality_expr(head, &head);
+    actual_node = bee_parse_inequality_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LT, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -488,7 +488,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_CHAIN_FINE) {
     const char *expr = "5 >= 4 <= 3 > 2 < 1";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_inequality_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_inequality_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LT, actual_node->type);
 
@@ -516,7 +516,7 @@ TEST(PARSER, PARSE_INEQUALITY_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "5 >= (4 <= (3 > (2 < 1)))";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_inequality_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_inequality_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_GTE, actual_node->type);
 
@@ -545,7 +545,7 @@ TEST(PARSER, PARSE_COMPARISON_EXPR_FINE) {
     const char *neq_expr = "3 != 4";
     const char *head = neq_expr;
 
-    struct bee_ast_node *actual_node = bee_parse_comparison_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_comparison_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_NEQ, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 3);
@@ -555,7 +555,7 @@ TEST(PARSER, PARSE_COMPARISON_EXPR_FINE) {
     const char *eq_expr = "4 == 5";
     head = eq_expr;
 
-    actual_node = bee_parse_comparison_expr(head, &head);
+    actual_node = bee_parse_comparison_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_EQ, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -568,7 +568,7 @@ TEST(PARSER, PARSE_COMPARISON_EXPR_CHAIN_FINE) {
     const char *expr = "5 != 4 == 3";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_comparison_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_comparison_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_EQ, actual_node->type);
 
@@ -586,7 +586,7 @@ TEST(PARSER, PARSE_COMPARISON_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "5 != (4 == 3)";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_comparison_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_comparison_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_NEQ, actual_node->type);
 
@@ -605,7 +605,7 @@ TEST(PARSER, PARSE_LOGICAL_EXPR_FINE) {
     const char *or_expr = "3 || 4";
     const char *head = or_expr;
 
-    struct bee_ast_node *actual_node = bee_parse_logical_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_logical_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 3);
@@ -615,7 +615,7 @@ TEST(PARSER, PARSE_LOGICAL_EXPR_FINE) {
     const char *and_expr = "4 && 5";
     head = and_expr;
 
-    actual_node = bee_parse_logical_expr(head, &head);
+    actual_node = bee_parse_logical_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, actual_node->type);
     assert_is_number_ast_node(actual_node->left, true, 4);
@@ -628,7 +628,7 @@ TEST(PARSER, PARSE_LOGICAL_EXPR_CHAIN_FINE) {
     const char *expr = "5 || 4 && 3";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_logical_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_logical_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, actual_node->type);
 
@@ -646,7 +646,7 @@ TEST(PARSER, PARSE_LOGICAL_EXPR_INVERSE_CHAIN_FINE) {
     const char *expr = "5 || (4 && 3)";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_logical_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_logical_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, actual_node->type);
 
@@ -664,7 +664,7 @@ TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_EQ_AND_NEQ) {
     const char *expr = "1 == 2 && 3 != 4";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_AND, actual_node->type);
 
@@ -688,7 +688,7 @@ TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_ADD_MUL_DIV) {
     const char *expr = "1 * 2 + 3 / 4";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
 
@@ -712,7 +712,7 @@ TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_MUL_ADD_SUB) {
     const char *expr = "1 + 2 * 3 - 4";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_SUB, actual_node->type);
     assert_is_number_ast_node(actual_node->right, true, 4);
@@ -736,7 +736,7 @@ TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_LT_OR_GT) {
     const char *expr = "1 < 2 || 3 > 4";
     const char *head = expr;
 
-    struct bee_ast_node *actual_node = bee_parse_expr(head, &head);
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
     ASSERT_NE(nullptr, actual_node);
     ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_OR, actual_node->type);
 
