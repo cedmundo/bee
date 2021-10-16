@@ -8,11 +8,3 @@ int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();
 }
-
-void assert_is_number_ast_node(bee_ast_node *node, bool with_value, int32_t value) {
-    ASSERT_NE(nullptr, node);
-    ASSERT_EQ(BEE_AST_NODE_TYPE_I32, node->type);
-    if (with_value) {
-        EXPECT_EQ(value, node->as_i32);
-    }
-}
