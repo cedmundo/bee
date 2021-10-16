@@ -25,6 +25,13 @@ struct bee_ast_node *ast_node_new_binary(enum bee_ast_node_type type, struct bee
     return node;
 }
 
+struct bee_ast_node *ast_node_new_unary(enum bee_ast_node_type type, struct bee_ast_node *left) {
+    struct bee_ast_node *node = bee_ast_node_new();
+    node->type = type;
+    node->left = left;
+    return node;
+}
+
 void bee_ast_node_free(struct bee_ast_node *node) {
     assert(node != NULL);
     if (node->left != NULL) {
@@ -287,7 +294,7 @@ struct bee_ast_node *bee_parse_factor_expr(const char **rest) {
 }
 
 struct bee_ast_node *bee_parse_term_expr(const char **rest) {
-    struct bee_ast_node *node = bee_parse_primary_expr(rest);
+    struct bee_ast_node *node = bee_parse_unary_expr(rest);
     for(;;) {
         bee_parse_spaces(rest);
 
@@ -295,7 +302,7 @@ struct bee_ast_node *bee_parse_term_expr(const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_MUL,
                     node,
-                    bee_parse_primary_expr(rest)
+                    bee_parse_unary_expr(rest)
             );
             continue;
         }
@@ -304,7 +311,7 @@ struct bee_ast_node *bee_parse_term_expr(const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_DIV,
                     node,
-                    bee_parse_primary_expr(rest)
+                    bee_parse_unary_expr(rest)
             );
             continue;
         }
@@ -313,13 +320,35 @@ struct bee_ast_node *bee_parse_term_expr(const char **rest) {
             node = ast_node_new_binary(
                     BEE_AST_NODE_TYPE_MOD,
                     node,
-                    bee_parse_primary_expr(rest)
+                    bee_parse_unary_expr(rest)
             );
             continue;
         }
 
         return node;
     }
+}
+
+struct bee_ast_node *bee_parse_unary_expr(const char **rest) {
+    bee_parse_spaces(rest);
+
+    if (match(rest, "!")) {
+        return ast_node_new_unary(BEE_AST_NODE_TYPE_LOG_NEG, bee_parse_unary_expr(rest));
+    }
+
+    if (match(rest, "~")) {
+        return ast_node_new_unary(BEE_AST_NODE_TYPE_BIT_NEG, bee_parse_unary_expr(rest));
+    }
+
+    if (match(rest, "-")) {
+        return ast_node_new_unary(BEE_AST_NODE_TYPE_ARI_INV_NEG, bee_parse_unary_expr(rest));
+    }
+
+    if (match(rest, "+")) {
+        return ast_node_new_unary(BEE_AST_NODE_TYPE_ARI_INV_POS, bee_parse_unary_expr(rest));
+    }
+
+    return bee_parse_primary_expr(rest);
 }
 
 struct bee_ast_node *bee_parse_primary_expr(const char **rest) {
@@ -463,6 +492,18 @@ jit_value_t bee_compile_expr(jit_function_t f, struct bee_ast_node *node) {
             value = jit_insn_load(f, tmp);
             break;
         }
+        case BEE_AST_NODE_TYPE_ARI_INV_POS:
+            value = jit_insn_mul(f, bee_compile_expr(f, node->left), jit_value_create_nint_constant(f, jit_type_int, +1));
+            break;
+        case BEE_AST_NODE_TYPE_ARI_INV_NEG:
+            value = jit_insn_mul(f, bee_compile_expr(f, node->left), jit_value_create_nint_constant(f, jit_type_int, -1));
+            break;
+        case BEE_AST_NODE_TYPE_BIT_NEG:
+            value = jit_insn_not(f, bee_compile_expr(f, node->left));
+            break;
+        case BEE_AST_NODE_TYPE_LOG_NEG:
+            value = jit_insn_neg(f, bee_compile_expr(f, node->left));
+            break;
     }
     return value;
 }

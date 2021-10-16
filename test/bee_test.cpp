@@ -755,3 +755,88 @@ TEST(PARSER, PARSE_INFIX_OPERATOR_PRECEDENCE_LT_OR_GT) {
     bee_ast_node_free(actual_node);
 }
 
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_ARI_NEG_OPERATOR_FINE) {
+    const char *expr = "-1";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ARI_INV_NEG, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 1);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_LOG_NEG_OPERATOR_FINE) {
+    const char *expr = "!1";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_NEG, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 1);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_BIT_NEG_OPERATOR_FINE) {
+    const char *expr = "~1";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_NEG, actual_node->type);
+    assert_is_number_ast_node(actual_node->left, true, 1);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_PRECEDENCE_WITH_UNARY_FINE) {
+    const char *expr = "-1 + -2";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ADD, actual_node->type);
+
+    struct bee_ast_node *left_node = actual_node->left;
+    ASSERT_NE(nullptr, left_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ARI_INV_NEG, left_node->type);
+    assert_is_number_ast_node(left_node->left, true, 1);
+
+    struct bee_ast_node *right_node = actual_node->right;
+    ASSERT_NE(nullptr, right_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ARI_INV_NEG, right_node->type);
+    assert_is_number_ast_node(right_node->left, true, 2);
+
+    bee_ast_node_free(actual_node);
+}
+
+// NOLINTNEXTLINE
+TEST(PARSER, PARSE_UNARY_CHAIN_FINE) {
+    const char *expr = "+-!~1";
+    const char *head = expr;
+
+    struct bee_ast_node *actual_node = bee_parse_expr(&head);
+    ASSERT_NE(nullptr, actual_node);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ARI_INV_POS, actual_node->type);
+
+    struct bee_ast_node *next = actual_node->left;
+    ASSERT_NE(nullptr, next);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_ARI_INV_NEG, next->type);
+
+    next = next->left;
+    ASSERT_NE(nullptr, next);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_LOG_NEG, next->type);
+
+    next = next->left;
+    ASSERT_NE(nullptr, next);
+    ASSERT_EQ(BEE_AST_NODE_TYPE_BIT_NEG, next->type);
+
+    assert_is_number_ast_node(next->left, true, 1);
+    bee_ast_node_free(actual_node);
+}

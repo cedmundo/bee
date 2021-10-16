@@ -17,9 +17,9 @@ bitwise_expr      = bitshift_expr spaces ("&" bitshift_expr | "|" bitshift_expr 
 bitshift_expr     = factor_expr spaces ("<<" factor_expr | ">>" factor_expr )*
 factor_expr       = term_expr spaces ("+" term_expr | "-" term_expr)*
 term_expr         = primary_expr spaces ("*" term_expr | "/" term_expr | "%" term_expr)*
+unary_expr        = spaces ("-" | "~" | "!" | "+") spaces unary_expr
+                  | primary_expr
 primary_expr      = spaces "(" expr ")"
-                  | unary_expr
-unary_expr        = spaces ("-" | "~" | "!") spaces unary_expr
                   | number_lit
 number_lit        = digit+
 digit             = "0".."9"

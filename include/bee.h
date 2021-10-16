@@ -25,6 +25,10 @@ enum bee_ast_node_type {
     BEE_AST_NODE_TYPE_GTE,
     BEE_AST_NODE_TYPE_LOG_AND,
     BEE_AST_NODE_TYPE_LOG_OR,
+    BEE_AST_NODE_TYPE_ARI_INV_POS,
+    BEE_AST_NODE_TYPE_ARI_INV_NEG,
+    BEE_AST_NODE_TYPE_LOG_NEG,
+    BEE_AST_NODE_TYPE_BIT_NEG,
 };
 
 struct bee_ast_node {
@@ -46,6 +50,7 @@ struct bee_ast_node *bee_parse_bitwise_expr(const char **rest);
 struct bee_ast_node *bee_parse_bitshift_expr(const char **rest);
 struct bee_ast_node *bee_parse_factor_expr(const char **rest);
 struct bee_ast_node *bee_parse_term_expr(const char **rest);
+struct bee_ast_node *bee_parse_unary_expr(const char **rest);
 struct bee_ast_node *bee_parse_primary_expr(const char **rest);
 struct bee_ast_node *bee_parse_number_lit(const char **rest);
 size_t bee_parse_spaces(const char **rest);
