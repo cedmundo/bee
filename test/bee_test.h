@@ -7,7 +7,7 @@
 #include <gtest/gtest.h>
 
 extern "C" {
-#include <bee.h>
+#include <bee/bee.h>
 };
 
 void assert_is_number_ast_node(bee_ast_node *node, bool with_value, int32_t value) {

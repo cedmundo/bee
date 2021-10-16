@@ -1,4 +1,4 @@
-#include <bee.h>
+#include <bee/bee.h>
 #include <stdio.h>
 #include <errno.h>
 #include <jit/jit.h>

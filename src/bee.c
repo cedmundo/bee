@@ -1,7 +1,7 @@
 //
 // Created by carlos on 9/26/21.
 //
-#include <bee.h>
+#include <bee/bee.h>
 #include <jit/jit-common.h>
 #include <jit/jit-insn.h>
 #include <jit/jit-type.h>
