@@ -18,12 +18,12 @@ file(GLOB LIB_SOURCES src/*.c)
 list(REMOVE_ITEM LIBS_SOURCES ${BIN_SOURCES})
 
 # Add bee library
-add_library(${PROJECT_LIBNAME} ${LIB_HEADERS} ${LIB_SOURCES})
+add_library(${PROJECT_LIBNAME} ${LIB_HEADERS} ${LIB_SOURCES} include/bee/scope.h src/scope.c)
 target_include_directories(${PROJECT_LIBNAME} PUBLIC ${LIB_INCLUDE})
 target_include_directories(${PROJECT_LIBNAME} PRIVATE ${LIBJIT_INCLUDE_DIRS})
 
 # Add bee executable
-add_executable(${PROJECT_NAME} src/main.c)
+add_executable(${PROJECT_NAME} src/main.c include/bee/scope.h)
 target_include_directories(${PROJECT_NAME} PUBLIC ${LIB_INCLUDE})
 target_include_directories(${PROJECT_NAME} PRIVATE ${LIBJIT_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} PUBLIC ${PROJECT_LIBNAME} ${LIBJIT_LIBRARIES})
@@ -35,7 +35,7 @@ set(GTEST_LIBRARY gtest)
 file(GLOB TEST_SOURCES test/*.cpp)
 file(GLOB TEST_HEADERS test/*.h)
 
-add_executable(${TEST_BINARY} ${TEST_HEADERS} ${TEST_SOURCES})
+add_executable(${TEST_BINARY} ${TEST_HEADERS} ${TEST_SOURCES} include/bee/scope.h test/scope_test.cpp)
 target_include_directories(${TEST_BINARY} PUBLIC ${LIB_INCLUDE})
 target_include_directories(${TEST_BINARY} PRIVATE ${LIBJIT_INCLUDE_DIRS})
 target_link_libraries(${TEST_BINARY} PUBLIC ${PROJECT_LIBNAME} ${LIBJIT_LIBRARIES} ${GTEST_LIBRARY})
