@@ -21,7 +21,10 @@ unary_expr        = spaces ("-" | "~" | "!" | "+") spaces unary_expr
                   | primary_expr
 primary_expr      = spaces "(" expr ")"
                   | number_lit
+                  | identifier
 number_lit        = digit+
+identifier        = (letter | "_" | "$") (digit | letter | "_" | "$")*
+letter            = "a" .. "z" | "A" .. "Z"
 digit             = "0".."9"
 space             = " " | "\t"
 spaces            = space*
