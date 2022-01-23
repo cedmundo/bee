@@ -289,18 +289,24 @@ static void test_tokenize_buffer_words_and_keywords(void **state) {
 
 static void test_tokenize_buffer_puncts(void **state) {
     (void) state;
-}
+    struct bee_token *token_start;
 
-static void test_tokenize_buffer_bad_tokens(void **state) {
-    (void) state;
-}
-
-static void test_tokenize_buffer_standard(void **state) {
-    (void) state;
-}
-
-static void test_tokenize_buffer_edge_cases(void **state) {
-    (void) state;
+    token_start = bee_token_new();
+    bee_tokenize_buffer("=+()", 4, token_start, NULL);
+    uint8_t punct_count = 0L;
+    struct bee_token *cur_token = token_start;
+    while (cur_token != NULL) {
+        if (cur_token->token_type != BEE_TT_EOF) {
+            assert_int_equal(cur_token->token_type, BEE_TT_PUNCT);
+            assert_int_equal(cur_token->len, 1);
+            punct_count++;
+        } else {
+            assert_ptr_not_equal(cur_token, token_start);
+        }
+        cur_token = cur_token->next;
+    }
+    assert_int_equal(punct_count, 4);
+    bee_token_free(token_start);
 }
 
 int main() {
@@ -320,9 +326,6 @@ int main() {
             cmocka_unit_test(test_tokenize_buffer_strings),
             cmocka_unit_test(test_tokenize_buffer_words_and_keywords),
             cmocka_unit_test(test_tokenize_buffer_puncts),
-            cmocka_unit_test(test_tokenize_buffer_bad_tokens),
-            cmocka_unit_test(test_tokenize_buffer_standard),
-            cmocka_unit_test(test_tokenize_buffer_edge_cases),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
