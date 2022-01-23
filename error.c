@@ -30,6 +30,10 @@ void bee_error_free(struct bee_error *token) {
     struct bee_error *tmp;
     while (cur != NULL) {
         tmp = cur->next;
+        if (cur->msg != NULL) {
+            jit_free(cur->msg);
+        }
+
         jit_free(cur);
         cur = tmp;
     }

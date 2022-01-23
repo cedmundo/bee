@@ -63,5 +63,6 @@ uint8_t utf8_decode(const char src[4], uint32_t *codepoint) {
         return 4;
     }
 
+    *codepoint = 0L;
     return 0;
 }
