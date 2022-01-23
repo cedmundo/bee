@@ -11,7 +11,7 @@
 
 #include "utf8.h"
 
-#define min(a, b) (a > b ? b : a)
+#define min(a, b) ((a) > (b) ? (b) : (a))
 
 static_assert(BEE_KEYWORDS_COUNT == 34, "Define keyword string here");
 static const char *keywords_table[] = {
