@@ -147,6 +147,66 @@ static void test_token_consume_any(void **state) {
     bee_error_list_free(errors);
 }
 
+static void test_token_consume_type(void **state) {
+    (void) state;
+
+    struct bee_error_list *errors = bee_error_list_new();
+    struct bee_token token = bee_token_start("var x := 10", errors);
+    assert_true(bee_token_consume_type(&token, BEE_TT_KEYWORD));
+    assert_true(bee_token_consume_type(&token, BEE_TT_WORD));
+    assert_true(bee_token_consume_type(&token, BEE_TT_PUNCT));
+    assert_true(bee_token_consume_type(&token, BEE_TT_DIGITS));
+    bee_error_list_free(errors);
+
+    errors = bee_error_list_new();
+    token = bee_token_start("const y := a", errors);
+    assert_false(bee_token_consume_type(&token, BEE_TT_STRING));
+    bee_error_list_free(errors);
+}
+
+static void test_token_consume_keyword(void **state) {
+    (void) state;
+
+    struct bee_error_list *errors = bee_error_list_new();
+    struct bee_token token = bee_token_start("var constant proc", errors);
+    assert_true(bee_token_consume_keyword(&token, BEE_KW_VAR));
+    assert_true(bee_token_consume_type(&token, BEE_TT_WORD));
+    assert_true(bee_token_consume_keyword(&token, BEE_KW_PROC));
+    bee_error_list_free(errors);
+
+    errors = bee_error_list_new();
+    token = bee_token_start("not_a_keyword", errors);
+    assert_false(bee_token_consume_keyword(&token, BEE_KW_PROC));
+    bee_error_list_free(errors);
+
+    errors = bee_error_list_new();
+    token = bee_token_start("const", errors);
+    assert_false(bee_token_consume_keyword(&token, BEE_KW_PROC));
+    bee_error_list_free(errors);
+}
+
+static void test_token_consume_punct(void **state) {
+    (void) state;
+
+    struct bee_error_list *errors = bee_error_list_new();
+    struct bee_token token = bee_token_start("+(-=)", errors);
+    assert_true(bee_token_consume_punct(&token, BEE_PN_ADD));
+    assert_true(bee_token_consume_punct(&token, BEE_PN_PAR_OPEN));
+    assert_true(bee_token_consume_punct(&token, BEE_PN_SELF_SUB));
+    assert_true(bee_token_consume_punct(&token, BEE_PN_PAR_CLOSE));
+    bee_error_list_free(errors);
+
+    errors = bee_error_list_new();
+    token = bee_token_start("not_a_punct", errors);
+    assert_false(bee_token_consume_keyword(&token, BEE_KW_PROC));
+    bee_error_list_free(errors);
+
+    errors = bee_error_list_new();
+    token = bee_token_start("+=", errors);
+    assert_false(bee_token_consume_punct(&token, BEE_PN_SELF_SUB));
+    bee_error_list_free(errors);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_is_space),
@@ -157,6 +217,9 @@ int main() {
             cmocka_unit_test(test_is_alphanum),
             cmocka_unit_test(test_is_keyword),
             cmocka_unit_test(test_token_consume_any),
+            cmocka_unit_test(test_token_consume_type),
+            cmocka_unit_test(test_token_consume_keyword),
+            cmocka_unit_test(test_token_consume_punct),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

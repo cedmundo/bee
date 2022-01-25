@@ -12,7 +12,6 @@
 #include "utf8.h"
 #include "error.h"
 
-
 static_assert(BEE_KEYWORDS_COUNT == 34, "Define keyword string here");
 static const char *bee_keywords_table[] = {
         [BEE_KW_MODULE] = "module",
@@ -54,12 +53,7 @@ static const char *bee_keywords_table[] = {
 
 static_assert(BEE_PUNCTS_COUNT == 44, "Define punct operands here");
 static const char *bee_punct_table[] = {
-        [BEE_PN_PAR_OPEN] = "(",
-        [BEE_PN_PAR_CLOSE] = ")",
-        [BEE_PN_SBR_OPEN] = "[",
-        [BEE_PN_SBR_CLOSE] = "]",
-        [BEE_PN_CBR_OPEN] = "{",
-        [BEE_PN_CBR_CLOSE] = "}",
+        [BEE_PN_EXPANSION] = "...",
         [BEE_PN_SELF_ADD] = "+=",
         [BEE_PN_SELF_SUB] = "-=",
         [BEE_PN_SELF_DIV] = "/=",
@@ -70,8 +64,24 @@ static const char *bee_punct_table[] = {
         [BEE_PN_SELF_BIT_AND] = "&=",
         [BEE_PN_SELF_BIT_OR] = "|=",
         [BEE_PN_SELF_BIT_NOT] = "~=",
+        [BEE_PN_WALRUS] = ":=",
+        [BEE_PN_TYPE_ARROW] = "->",
+        [BEE_PN_LAMBDA_ARROW] = "=>",
+        [BEE_PN_BIT_LSH] = "<<",
+        [BEE_PN_BIT_RSH] = ">>",
+        [BEE_PN_LOG_AND] = "&&",
+        [BEE_PN_LOG_OR] = "||",
+        [BEE_PN_EQ] = "==",
+        [BEE_PN_NE] = "!=",
+        [BEE_PN_LE] = "<=",
+        [BEE_PN_GE] = ">=",
+        [BEE_PN_PAR_OPEN] = "(",
+        [BEE_PN_PAR_CLOSE] = ")",
+        [BEE_PN_SBR_OPEN] = "[",
+        [BEE_PN_SBR_CLOSE] = "]",
+        [BEE_PN_CBR_OPEN] = "{",
+        [BEE_PN_CBR_CLOSE] = "}",
         [BEE_PN_SEMICOLON] = ";",
-        [BEE_PN_EXPANSION] = "...",
         [BEE_PN_COLON] = ":",
         [BEE_PN_DOT] = ".",
         [BEE_PN_ADD] = "+",
@@ -79,25 +89,14 @@ static const char *bee_punct_table[] = {
         [BEE_PN_DIV] = "/",
         [BEE_PN_MUL] = "*",
         [BEE_PN_REM] = "%",
-        [BEE_PN_BIT_LSH] = "<<",
-        [BEE_PN_BIT_RSH] = ">>",
-        [BEE_PN_LOG_AND] = "&&",
-        [BEE_PN_LOG_OR] = "||",
         [BEE_PN_LOG_NOT] = "!",
         [BEE_PN_BIT_AND] = "&",
         [BEE_PN_BIT_OR] = "|",
         [BEE_PN_BIT_NOT] = "~",
         [BEE_PN_BIT_XOR] = "^",
-        [BEE_PN_EQ] = "==",
-        [BEE_PN_NE] = "!=",
-        [BEE_PN_LE] = "<=",
         [BEE_PN_LT] = "<",
-        [BEE_PN_GE] = ">=",
         [BEE_PN_GT] = ">",
-        [BEE_PN_WALRUS] = ":=",
         [BEE_PN_ASSIGN] = "=",
-        [BEE_PN_TYPE_ARROW] = "->",
-        [BEE_PN_LAMBDA_ARROW] = "=>",
         NULL
 };
 
@@ -176,39 +175,42 @@ struct bee_token bee_token_start(char *base, struct bee_error_list *errors) {
     };
 }
 
-struct bee_token bee_token_consume_type(struct bee_token last, enum bee_token_type token_type) {
-    struct bee_token ahead = bee_token_consume_any(last);
+bool bee_token_consume_type(struct bee_token *token, enum bee_token_type token_type) {
+    struct bee_token ahead = bee_token_consume_any(*token);
     if (ahead.token_type == token_type) {
-        return ahead;
+        *token = ahead;
+        return true;
     }
 
-    return last;
+    return false;
 }
 
-struct bee_token bee_token_consume_keyword(struct bee_token last, enum bee_keyword keyword) {
-    struct bee_token ahead = bee_token_consume_any(last);
+bool bee_token_consume_keyword(struct bee_token *token, enum bee_keyword keyword) {
+    struct bee_token ahead = bee_token_consume_any(*token);
     const char* keyword_str = bee_keywords_table[keyword];
     size_t keyword_len = jit_strlen(keyword_str);
     if (ahead.token_type == BEE_TT_KEYWORD &&
         keyword_len == ahead.len &&
-        jit_memcmp(keyword_str, ahead.base, keyword_len)) {
-        return ahead;
+        jit_memcmp(keyword_str, ahead.base, keyword_len) == 0) {
+        *token = ahead;
+        return true;
     }
 
-    return last;
+    return false;
 }
 
-struct bee_token bee_token_consume_punct(struct bee_token last, enum bee_punct punct) {
-    struct bee_token ahead = bee_token_consume_any(last);
+bool bee_token_consume_punct(struct bee_token *token, enum bee_punct punct) {
+    struct bee_token ahead = bee_token_consume_any(*token);
     const char* punct_str = bee_punct_table[punct];
     size_t punct_len = jit_strlen(punct_str);
-    if (ahead.token_type == BEE_TT_KEYWORD &&
+    if (ahead.token_type == BEE_TT_PUNCT &&
         punct_len == ahead.len &&
-        jit_memcmp(punct_str, ahead.base, punct_len)) {
-        return ahead;
+        jit_memcmp(punct_str, ahead.base, punct_len) == 0) {
+        *token = ahead;
+        return true;
     }
 
-    return last;
+    return false;
 }
 
 struct bee_token bee_token_consume_any(struct bee_token last_token) {

@@ -71,12 +71,7 @@ enum bee_keyword {
 };
 
 enum bee_punct {
-    BEE_PN_PAR_OPEN,
-    BEE_PN_PAR_CLOSE,
-    BEE_PN_SBR_OPEN,
-    BEE_PN_SBR_CLOSE,
-    BEE_PN_CBR_OPEN,
-    BEE_PN_CBR_CLOSE,
+    BEE_PN_EXPANSION,
     BEE_PN_SELF_ADD,
     BEE_PN_SELF_SUB,
     BEE_PN_SELF_DIV,
@@ -87,8 +82,24 @@ enum bee_punct {
     BEE_PN_SELF_BIT_AND,
     BEE_PN_SELF_BIT_OR,
     BEE_PN_SELF_BIT_NOT,
+    BEE_PN_WALRUS,
+    BEE_PN_TYPE_ARROW,
+    BEE_PN_LAMBDA_ARROW,
+    BEE_PN_BIT_LSH,
+    BEE_PN_BIT_RSH,
+    BEE_PN_LOG_AND,
+    BEE_PN_LOG_OR,
+    BEE_PN_EQ,
+    BEE_PN_NE,
+    BEE_PN_LE,
+    BEE_PN_GE,
+    BEE_PN_PAR_OPEN,
+    BEE_PN_PAR_CLOSE,
+    BEE_PN_SBR_OPEN,
+    BEE_PN_SBR_CLOSE,
+    BEE_PN_CBR_OPEN,
+    BEE_PN_CBR_CLOSE,
     BEE_PN_SEMICOLON,
-    BEE_PN_EXPANSION,
     BEE_PN_COLON,
     BEE_PN_DOT,
     BEE_PN_ADD,
@@ -96,25 +107,14 @@ enum bee_punct {
     BEE_PN_DIV,
     BEE_PN_MUL,
     BEE_PN_REM,
-    BEE_PN_BIT_LSH,
-    BEE_PN_BIT_RSH,
-    BEE_PN_LOG_AND,
-    BEE_PN_LOG_OR,
     BEE_PN_LOG_NOT,
     BEE_PN_BIT_AND,
     BEE_PN_BIT_OR,
     BEE_PN_BIT_NOT,
     BEE_PN_BIT_XOR,
-    BEE_PN_EQ,
-    BEE_PN_NE,
-    BEE_PN_LE,
     BEE_PN_LT,
-    BEE_PN_GE,
     BEE_PN_GT,
-    BEE_PN_WALRUS,
     BEE_PN_ASSIGN,
-    BEE_PN_TYPE_ARROW,
-    BEE_PN_LAMBDA_ARROW,
     BEE_PUNCTS_COUNT,
 };
 
@@ -127,9 +127,9 @@ bool bee_is_alphanum(uint32_t codepoint);
 bool bee_is_keyword(const char *base, size_t len);
 
 struct bee_token bee_token_start(char *base, struct bee_error_list *errors);
-struct bee_token bee_token_consume_type(struct bee_token last, enum bee_token_type token_type);
-struct bee_token bee_token_consume_keyword(struct bee_token last, enum bee_keyword keyword);
-struct bee_token bee_token_consume_punct(struct bee_token last, enum bee_punct punct);
+bool bee_token_consume_type(struct bee_token *token, enum bee_token_type token_type);
+bool bee_token_consume_keyword(struct bee_token *last, enum bee_keyword keyword);
+bool bee_token_consume_punct(struct bee_token *last, enum bee_punct punct);
 struct bee_token bee_token_consume_any(struct bee_token last);
 
 #endif //BEE_LEXER_H
