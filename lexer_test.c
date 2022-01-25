@@ -10,111 +10,111 @@
 static void test_is_space(void **state) {
     (void) state;
 
-    assert_true(is_space(' '));
-    assert_true(is_space('\t'));
-    assert_false(is_space('x'));
+    assert_true(bee_is_space(' '));
+    assert_true(bee_is_space('\t'));
+    assert_false(bee_is_space('x'));
 }
 
 static void test_is_newline(void **state) {
     (void) state;
 
-    assert_true(is_eol('\n'));
-    assert_false(is_eol('a'));
+    assert_true(bee_is_eol('\n'));
+    assert_false(bee_is_eol('a'));
 }
 
 static void test_is_punct(void **state) {
     (void) state;
 
-    assert_true(is_punct('+'));
-    assert_true(is_punct('-'));
-    assert_true(is_punct('*'));
-    assert_true(is_punct('/'));
-    assert_true(is_punct('%'));
-    assert_true(is_punct('&'));
-    assert_true(is_punct('|'));
-    assert_true(is_punct('!'));
-    assert_true(is_punct(':'));
-    assert_true(is_punct('.'));
-    assert_true(is_punct(','));
-    assert_true(is_punct('='));
-    assert_true(is_punct('>'));
-    assert_true(is_punct('<'));
-    assert_true(is_punct('('));
-    assert_true(is_punct(')'));
-    assert_true(is_punct('['));
-    assert_true(is_punct(']'));
-    assert_true(is_punct('{'));
-    assert_true(is_punct('}'));
-    assert_true(is_punct('?'));
-    assert_true(is_punct('~'));
-    assert_true(is_punct('\''));
-    assert_true(is_punct('"'));
-    assert_true(is_punct('@'));
-    assert_false(is_punct(' '));
-    assert_false(is_punct('a'));
-    assert_false(is_punct('1'));
+    assert_true(bee_is_punct('+'));
+    assert_true(bee_is_punct('-'));
+    assert_true(bee_is_punct('*'));
+    assert_true(bee_is_punct('/'));
+    assert_true(bee_is_punct('%'));
+    assert_true(bee_is_punct('&'));
+    assert_true(bee_is_punct('|'));
+    assert_true(bee_is_punct('!'));
+    assert_true(bee_is_punct(':'));
+    assert_true(bee_is_punct('.'));
+    assert_true(bee_is_punct(','));
+    assert_true(bee_is_punct('='));
+    assert_true(bee_is_punct('>'));
+    assert_true(bee_is_punct('<'));
+    assert_true(bee_is_punct('('));
+    assert_true(bee_is_punct(')'));
+    assert_true(bee_is_punct('['));
+    assert_true(bee_is_punct(']'));
+    assert_true(bee_is_punct('{'));
+    assert_true(bee_is_punct('}'));
+    assert_true(bee_is_punct('?'));
+    assert_true(bee_is_punct('~'));
+    assert_true(bee_is_punct('\''));
+    assert_true(bee_is_punct('"'));
+    assert_true(bee_is_punct('@'));
+    assert_false(bee_is_punct(' '));
+    assert_false(bee_is_punct('a'));
+    assert_false(bee_is_punct('1'));
 }
 
 static void test_is_alpha(void **state) {
     (void) state;
     for (int c='a'; c<='z'; c++) {
-        assert_true(is_alpha(c));
+        assert_true(bee_is_alpha(c));
     }
 
     for (int c='A'; c<='Z'; c++) {
-        assert_true(is_alpha(c));
+        assert_true(bee_is_alpha(c));
     }
 
-    assert_true(is_alpha(0x03A0)); // Π
-    assert_false(is_alpha('0'));
-    assert_false(is_alpha('9'));
+    assert_true(bee_is_alpha(0x03A0)); // Π
+    assert_false(bee_is_alpha('0'));
+    assert_false(bee_is_alpha('9'));
 }
 
 static void test_is_digit(void **state) {
     (void) state;
 
     for (int c='0'; c<='9'; c++) {
-        assert_true(is_digit(c));
+        assert_true(bee_is_digit(c));
     }
 
-    assert_false(is_digit('.'));
-    assert_false(is_digit('a'));
-    assert_false(is_digit(' '));
+    assert_false(bee_is_digit('.'));
+    assert_false(bee_is_digit('a'));
+    assert_false(bee_is_digit(' '));
 }
 
 static void test_is_alphanum(void **state) {
     (void) state;
 
     for (int c='a'; c<='z'; c++) {
-        assert_true(is_alphanum(c));
+        assert_true(bee_is_alphanum(c));
     }
 
     for (int c='A'; c<='Z'; c++) {
-        assert_true(is_alphanum(c));
+        assert_true(bee_is_alphanum(c));
     }
 
     for (int c='0'; c<='9'; c++) {
-        assert_true(is_alphanum(c));
+        assert_true(bee_is_alphanum(c));
     }
 
-    assert_true(is_alphanum('_'));
-    assert_true(is_alphanum('$'));
+    assert_true(bee_is_alphanum('_'));
+    assert_true(bee_is_alphanum('$'));
 
-    assert_false(is_alphanum(' '));
-    assert_false(is_alphanum('\n'));
-    assert_false(is_alphanum('.'));
+    assert_false(bee_is_alphanum(' '));
+    assert_false(bee_is_alphanum('\n'));
+    assert_false(bee_is_alphanum('.'));
 }
 
 static void test_is_keyword(void **state) {
     (void) state;
 
-    assert_true(is_keyword("proc", 4));
-    assert_true(is_keyword("end", 3));
-    assert_true(is_keyword("in", 2));
+    assert_true(bee_is_keyword("proc", 4));
+    assert_true(bee_is_keyword("end", 3));
+    assert_true(bee_is_keyword("in", 2));
 
-    assert_false(is_keyword("procedure", 9));
-    assert_false(is_keyword("inside", 6));
-    assert_false(is_keyword("friend", 6));
+    assert_false(bee_is_keyword("procedure", 9));
+    assert_false(bee_is_keyword("inside", 6));
+    assert_false(bee_is_keyword("friend", 6));
 }
 
 static void test_tokenize_buffer_eof(void **state) {

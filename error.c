@@ -11,10 +11,10 @@ struct bee_error *bee_error_new() {
     return jit_calloc(1, sizeof(struct bee_error));
 }
 
-struct bee_error *bee_error_push(struct bee_error *error, size_t col,
-                                 size_t row, char *msg, ...) {
-    error->col = col;
+struct bee_error *bee_error_push(struct bee_error *error, size_t row,
+                                 size_t col, char *msg, ...) {
     error->row = row;
+    error->col = col;
     error->msg = jit_calloc(BEE_ERROR_BUF_SIZE, sizeof(char));
     error->next = bee_error_new();
 
