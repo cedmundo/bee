@@ -9,18 +9,18 @@
 
 static void test_error_push(void **state) {
     (void) state;
-    struct bee_error *first = bee_error_new();
-    assert_non_null(first);
 
-    struct bee_error *second = bee_error_push(first, 1, 1, "message");
-    assert_non_null(second);
-    assert_string_equal(first->msg, "message");
+    struct bee_error_list *list = bee_error_list_new();
+    bee_error_list_push(list, 1, 2, "a message");
+    bee_error_list_push(list, 1, 4, "format %d", 10);
 
-    struct bee_error *last = bee_error_push(second, 1, 1, "format %d", 10);
-    assert_non_null(last);
-    assert_string_equal(second->msg, "format 10");
+    assert_non_null(list->head);
+    assert_string_equal(list->head->msg, "a message");
 
-    bee_error_free(first);
+    assert_non_null(list->tail);
+    assert_string_equal(list->tail->msg, "format 10");
+
+    bee_error_list_free(list);
 }
 
 int main() {

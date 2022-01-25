@@ -42,7 +42,7 @@ static void test_utf8_decode(void **state){
 }
 
 static void test_utf8_decode_invalid_seqs(void **state) {
-    (void) **state;
+    (void) state;
     // TODO: Actually detect and replace invalid UTF8 sequences
 //    uint32_t codepoint;
 //
