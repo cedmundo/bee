@@ -1,130 +1,117 @@
 //
-// Created by carlos on 1/19/22.
+// Created by carlos on 6/10/22.
 //
 
 #ifndef BEE_LEXER_H
 #define BEE_LEXER_H
-
-#include "lexer.h"
-#include "error.h"
-#include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
-#include <assert.h>
 
 enum bee_token_type {
-    BEE_TT_EOF,
-    BEE_TT_EOL,
-    BEE_TT_PUNCT,
-    BEE_TT_KEYWORD,
-    BEE_TT_WORD,
-    BEE_TT_STRING,
-    BEE_TT_DIGITS,
-    BEE_TOKEN_TYPE_COUNT,
+    BEE_TOKEN_TYPE_NONE,
+    BEE_TOKEN_TYPE_EOF,
+    BEE_TOKEN_TYPE_EOL,
+    BEE_TOKEN_TYPE_PUNCT,
+    BEE_TOKEN_TYPE_NUMBER,
+    BEE_TOKEN_TYPE_STRING,
+    BEE_TOKEN_TYPE_BOOLEAN,
+    BEE_TOKEN_TYPE_KEYWORD,
+    BEE_TOKEN_TYPE_ID,
+};
+
+enum bee_token_error {
+    BEE_TOKEN_ERROR_NONE,
+    BEE_TOKEN_ERROR_UNKNOWN_CHAR,
+    BEE_TOKEN_ERROR_UNTERMINATED_STRING,
+    BEE_TOKEN_ERROR_UNKNOWN_PUNCT,
+};
+
+enum bee_keyword_type {
+    BEE_KEYWORD_NONE,
+    BEE_KEYWORD_MODULE,
+    BEE_KEYWORD_IMPORT,
+    BEE_KEYWORD_EXPORT,
+    BEE_KEYWORD_EXTERN,
+    BEE_KEYWORD_END,
+    BEE_KEYWORD_FUNCTION,
+    BEE_KEYWORD_RETURN,
+    BEE_KEYWORD_ASSERT,
+    BEE_KEYWORD_WHILE,
+    BEE_KEYWORD_FOR,
+    BEE_KEYWORD_IF,
+    BEE_KEYWORD_ELIF,
+    BEE_KEYWORD_ELSE,
+    BEE_KEYWORD_IN,
+    BEE_KEYWORD_AS,
+    BEE_KEYWORD_IS,
+    BEE_KEYWORD_SWITCH,
+    BEE_KEYWORD_CASE,
+    BEE_KEYWORD_CONTINUE,
+    BEE_KEYWORD_BREAK,
+    BEE_KEYWORD_FALLTHROUGH,
+    BEE_KEYWORD_TYPE,
+    BEE_KEYWORD_LET,
+    BEE_KEYWORD_EFFECT,
+    BEE_KEYWORD_HANDLER,
+    BEE_KEYWORD_HANDLE,
+    BEE_KEYWORD_RESUME,
+    BEE_KEYWORD_ABORT,
+    BEE_KEYWORD_WITH,
+    BEE_KEYWORD_DO,
+    BEE_KEYWORD_TRUE,
+    BEE_KEYWORD_FALSE,
+    BEE_KEYWORD_TYPES,
+};
+
+enum bee_punct_type {
+    BEE_PUNCT_NONE,
+    BEE_PUNCT_WALRUS,
+    BEE_PUNCT_EQ,
+    BEE_PUNCT_NE,
+    BEE_PUNCT_GE,
+    BEE_PUNCT_LE,
+    BEE_PUNCT_LOG_AND,
+    BEE_PUNCT_LOG_OR,
+    BEE_PUNCT_BIT_RSH,
+    BEE_PUNCT_BIT_LSH,
+    BEE_PUNCT_RANGE,
+    BEE_PUNCT_ADD,
+    BEE_PUNCT_SUB,
+    BEE_PUNCT_MUL,
+    BEE_PUNCT_DIV,
+    BEE_PUNCT_REM,
+    BEE_PUNCT_BIT_AND,
+    BEE_PUNCT_BIT_OR,
+    BEE_PUNCT_AT,
+    BEE_PUNCT_DOT,
+    BEE_PUNCT_COMMA,
+    BEE_PUNCT_LOG_NEG,
+    BEE_PUNCT_BIT_NEG,
+    BEE_PUNCT_ARI_NEG,
+    BEE_PUNCT_ASSIGN,
+    BEE_PUNCT_COLON,
+    BEE_PUNCT_LP,
+    BEE_PUNCT_RP,
+    BEE_PUNCT_LSB,
+    BEE_PUNCT_RSB,
+    BEE_PUNCT_LCB,
+    BEE_PUNCT_RCB,
+    BEE_PUNCT_TYPES
 };
 
 struct bee_token {
-    struct bee_token *next;
-    char *base;
+    const char *name;
+    const char *base;
+    size_t off;
     size_t len;
-    size_t col;
     size_t row;
-    enum bee_token_type token_type;
+    size_t col;
+    enum bee_token_type type;
+    enum bee_token_error error;
+    enum bee_keyword_type keyword_type;
+    enum bee_punct_type punct_type;
 };
 
-enum bee_keyword {
-    BEE_KW_MODULE,
-    BEE_KW_IMPORT,
-    BEE_KW_EXPORT,
-    BEE_KW_EXTERN,
-    BEE_KW_PRIVATE,
-    BEE_KW_CONST,
-    BEE_KW_VAL,
-    BEE_KW_VAR,
-    BEE_KW_END,
-    BEE_KW_STRUCT,
-    BEE_KW_ENUM,
-    BEE_KW_PROC,
-    BEE_KW_PASS,
-    BEE_KW_ASSERT,
-    BEE_KW_WHILE,
-    BEE_KW_FOR,
-    BEE_KW_IN,
-    BEE_KW_AS,
-    BEE_KW_LABEL,
-    BEE_KW_BREAK,
-    BEE_KW_CONTINUE,
-    BEE_KW_IF,
-    BEE_KW_ELIF,
-    BEE_KW_ELSE,
-    BEE_KW_SWITCH,
-    BEE_KW_CASE,
-    BEE_KW_FALLTHROUGH,
-    BEE_KW_DEFAULT,
-    BEE_KW_TYPE,
-    BEE_KW_NOT,
-    BEE_KW_AND,
-    BEE_KW_OR,
-    BEE_KW_TRUE,
-    BEE_KW_FALSE,
-    BEE_KEYWORDS_COUNT,
-};
-
-static_assert(BEE_KEYWORDS_COUNT == 34, "Define keyword string here");
-static const char *bee_keywords_table[] = {
-        [BEE_KW_MODULE] = "module",
-        [BEE_KW_IMPORT] = "import",
-        [BEE_KW_EXPORT] = "export",
-        [BEE_KW_EXTERN] = "extern",
-        [BEE_KW_PRIVATE] = "private",
-        [BEE_KW_CONST] = "const",
-        [BEE_KW_VAL] = "val",
-        [BEE_KW_VAR] = "var",
-        [BEE_KW_END] = "end",
-        [BEE_KW_STRUCT] = "struct",
-        [BEE_KW_ENUM] = "enum",
-        [BEE_KW_PROC] = "proc",
-        [BEE_KW_PASS] = "pass",
-        [BEE_KW_ASSERT] = "assert",
-        [BEE_KW_WHILE] = "while",
-        [BEE_KW_FOR] = "for",
-        [BEE_KW_IN] = "in",
-        [BEE_KW_AS] = "as",
-        [BEE_KW_LABEL] = "label",
-        [BEE_KW_BREAK] = "break",
-        [BEE_KW_CONTINUE] = "continue",
-        [BEE_KW_IF] = "if",
-        [BEE_KW_ELIF] = "elif",
-        [BEE_KW_ELSE] = "else",
-        [BEE_KW_SWITCH] = "switch",
-        [BEE_KW_CASE] = "case",
-        [BEE_KW_FALLTHROUGH] = "fallthrough",
-        [BEE_KW_DEFAULT] = "default",
-        [BEE_KW_TYPE] = "type",
-        [BEE_KW_NOT] = "not",
-        [BEE_KW_AND] = "and",
-        [BEE_KW_OR] = "or",
-        [BEE_KW_TRUE] = "true",
-        [BEE_KW_FALSE] = "false",
-        NULL
-};
-
-struct bee_token *bee_token_new();
-void bee_token_free(struct bee_token *token);
-
-bool bee_is_space(uint32_t codepoint);
-bool bee_is_eol(uint32_t codepoint);
-bool bee_is_punct(uint32_t codepoint);
-bool bee_is_alpha(uint32_t codepoint);
-bool bee_is_digit(uint32_t codepoint);
-bool bee_is_alphanum(uint32_t codepoint);
-bool bee_is_keyword(const char *base, size_t len);
-
-bool bee_token_match(struct bee_token *token, enum bee_token_type token_type);
-bool bee_keyword_match(struct bee_token *token, enum bee_keyword keyword);
-bool bee_punct_match(struct bee_token *token, char punct);
-
-void bee_tokenize_buffer(char *data_buf, size_t data_len,
-                         struct bee_token *token_start, struct bee_error *error_start);
+struct bee_token bee_token_start(const char *name, const char *data);
+struct bee_token bee_token_next(struct bee_token prev);
 
 #endif //BEE_LEXER_H

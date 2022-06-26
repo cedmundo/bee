@@ -1,243 +1,341 @@
 //
-// Created by carlos on 1/19/22.
+// Created by carlos on 6/10/22.
 //
-
-#include "lexer.h"
-
-#include <jit/jit-util.h>
-#include <stdint.h>
+#include <string.h>
 #include <stdbool.h>
 #include <assert.h>
 
-#include "utf8.h"
+#include "lexer.h"
 
-#define min(a, b) ((a) > (b) ? (b) : (a))
+#define TRACKED_PUNCT_TYPES 32
+static_assert(BEE_PUNCT_TYPES == TRACKED_PUNCT_TYPES,
+              "Exhaustive punct string table");
+static const char *puncts_table[] = {
+        [BEE_PUNCT_NONE] = NULL,
+        [BEE_PUNCT_WALRUS] = ":=",
+        [BEE_PUNCT_EQ] = "==",
+        [BEE_PUNCT_NE] = "!=",
+        [BEE_PUNCT_GE] = ">=",
+        [BEE_PUNCT_LE] = "<=",
+        [BEE_PUNCT_LOG_AND] = "&&",
+        [BEE_PUNCT_LOG_OR] = "||",
+        [BEE_PUNCT_BIT_RSH] = ">>",
+        [BEE_PUNCT_BIT_LSH] = "<<",
+        [BEE_PUNCT_RANGE] = "..",
+        [BEE_PUNCT_ADD] = "+",
+        [BEE_PUNCT_SUB] = "-",
+        [BEE_PUNCT_MUL] = "*",
+        [BEE_PUNCT_DIV] = "/",
+        [BEE_PUNCT_REM] = "%",
+        [BEE_PUNCT_BIT_AND] = "&",
+        [BEE_PUNCT_BIT_OR] = "|",
+        [BEE_PUNCT_AT] = "@",
+        [BEE_PUNCT_DOT] = ".",
+        [BEE_PUNCT_COMMA] = ",",
+        [BEE_PUNCT_LOG_NEG] = "!",
+        [BEE_PUNCT_BIT_NEG] = "~",
+        [BEE_PUNCT_ARI_NEG] = "-",
+        [BEE_PUNCT_ASSIGN] = "=",
+        [BEE_PUNCT_COLON] = ":",
+        [BEE_PUNCT_LP] = ")",
+        [BEE_PUNCT_RP] = "(",
+        [BEE_PUNCT_LSB] = "[",
+        [BEE_PUNCT_RSB] = "]",
+        [BEE_PUNCT_LCB] = "{",
+        [BEE_PUNCT_RCB] = "}",
+};
 
-struct bee_token *bee_token_new() {
-    return jit_calloc(1, sizeof(struct bee_token));
+#define TRACKED_KEYWORD_TYPES 33
+static_assert(BEE_KEYWORD_TYPES == TRACKED_KEYWORD_TYPES,
+              "Exhaustive punct string table");
+static const char *keywords_table[] = {
+        [BEE_KEYWORD_NONE] = NULL,
+        [BEE_KEYWORD_END] = "end",
+        [BEE_KEYWORD_MODULE] = "module",
+        [BEE_KEYWORD_IMPORT] = "import",
+        [BEE_KEYWORD_EXPORT] = "export",
+        [BEE_KEYWORD_EXTERN] = "extern",
+        [BEE_KEYWORD_FUNCTION] = "function",
+        [BEE_KEYWORD_RETURN] = "return",
+        [BEE_KEYWORD_ASSERT] = "assert",
+        [BEE_KEYWORD_WHILE] = "while",
+        [BEE_KEYWORD_FOR] = "for",
+        [BEE_KEYWORD_IF] = "if",
+        [BEE_KEYWORD_ELIF] = "elif",
+        [BEE_KEYWORD_ELSE] = "else",
+        [BEE_KEYWORD_IN] = "in",
+        [BEE_KEYWORD_AS] = "as",
+        [BEE_KEYWORD_IS] = "is",
+        [BEE_KEYWORD_SWITCH] = "switch",
+        [BEE_KEYWORD_CASE] = "case",
+        [BEE_KEYWORD_CONTINUE] = "continue",
+        [BEE_KEYWORD_BREAK] = "break",
+        [BEE_KEYWORD_FALLTHROUGH] = "fallthrough",
+        [BEE_KEYWORD_TYPE] = "type",
+        [BEE_KEYWORD_LET] = "let",
+        [BEE_KEYWORD_EFFECT] = "effect",
+        [BEE_KEYWORD_HANDLER] = "handler",
+        [BEE_KEYWORD_HANDLE] = "handle",
+        [BEE_KEYWORD_RESUME] = "resume",
+        [BEE_KEYWORD_ABORT] = "abort",
+        [BEE_KEYWORD_WITH] = "with",
+        [BEE_KEYWORD_DO] = "do",
+        [BEE_KEYWORD_TRUE] = "true",
+        [BEE_KEYWORD_FALSE] = "false",
+};
+
+
+static bool is_first_eof(const char *s) {
+    char c = *s;
+    return c == '\0';
 }
 
-void bee_token_free(struct bee_token *token) {
-    struct bee_token *cur = token;
-    struct bee_token *tmp;
-    while (cur != NULL) {
-        tmp = cur->next;
-        jit_free(cur);
-        cur = tmp;
-    }
+static bool is_first_eol(const char *s) {
+    char c = *s;
+    return c == '\n' || c == '\r';
 }
 
-inline bool bee_is_space(uint32_t codepoint) {
-    return codepoint == ' ' || codepoint == '\t';
+static bool is_first_digit(const char *s) {
+    char c = *s;
+    return c >= '0' && c <= '9';
 }
 
-inline bool bee_is_eol(uint32_t codepoint) {
-    return codepoint == '\n' || codepoint == ';';
+static bool is_first_alpha(const char *s) {
+    char c = *s;
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
 }
 
-inline bool bee_is_digit(uint32_t codepoint) {
-    return codepoint >= '0' && codepoint <= '9';
+static bool is_first_space(const char *s) {
+    char c = *s;
+    return c == ' ' || c == '\t';
 }
 
-inline bool bee_is_alpha(uint32_t codepoint) {
-    return (codepoint >= 'a' && codepoint <= 'z') ||
-           (codepoint >= 'A' && codepoint <= 'Z') ||
-           (codepoint >= 0x2070 && codepoint <= 0x209F) ||
-           (codepoint >= 0x0370 && codepoint <= 0x03FF) ||
-           codepoint == '_' || codepoint == '$' || codepoint == 0x00B7;
+static bool is_id_start(const char *s) {
+    char c = *s;
+    return is_first_alpha(s) || c == '_' || c == '$';
 }
 
-inline bool bee_is_alphanum(uint32_t codepoint) {
-    return bee_is_digit(codepoint) || bee_is_alpha(codepoint);
+static bool is_first_punct(const char *s) {
+    return !is_first_eof(s) && !is_first_digit(s) && !is_id_start(s) &&
+           !is_first_space(s) && !is_first_eol(s);
 }
 
-inline bool bee_is_punct(uint32_t codepoint) {
-    return codepoint < 127 && !bee_is_alphanum(codepoint) && !bee_is_space(codepoint) && !bee_is_eol(codepoint);
-}
-
-inline bool bee_is_keyword(const char *base, size_t len) {
-    const char **cur_keyword = bee_keywords_table;
-    while (*cur_keyword != NULL) {
-        size_t keyword_len = jit_strlen(*cur_keyword);
-        if (jit_memcmp(base, *cur_keyword, len) == 0 && len == keyword_len) {
-            return true;
-        }
-        cur_keyword++;
-    }
-
-    return false;
-}
-
-bool bee_token_match(struct bee_token *token, enum bee_token_type token_type) {
-    return token->token_type == token_type;
-}
-
-bool bee_punct_match(struct bee_token *token, char punct) {
-    return bee_token_match(token, BEE_TT_PUNCT) && token->len == 1 && token->base[0] == punct;
-}
-
-bool bee_keyword_match(struct bee_token *token, enum bee_keyword keyword) {
-    const char *keyword_value = bee_keywords_table[keyword];
-    size_t keyword_size = jit_strlen(keyword_value);
-    return bee_token_match(token, BEE_TT_KEYWORD) &&
-        keyword_size == token->len &&
-        jit_memcmp(token->base, keyword_value, token->len) == 0;
-}
-
-void bee_tokenize_buffer(char *data_buf, size_t data_len,
-                         struct bee_token *token_start, struct bee_error *error_start) {
-    size_t pos = 0L;
-    size_t row = 1L;
-    size_t col = 0L;
-    bool last_escaped = false;
-    struct bee_token *cur_token = token_start;
-    struct bee_error *cur_error = error_start;
-    char *cur_base = data_buf;
-
-    static_assert(BEE_TOKEN_TYPE_COUNT == 7, "Define how to extract token here");
-    while (pos < data_len) {
-        uint32_t sym = 0L;
-        cur_base = data_buf + pos;
-        char utf8_seq[4] = {0,0,0,0};
-
-        // TODO: Statically check if seq slot can be filled in
-        jit_memcpy(utf8_seq, cur_base, min(4, data_len - pos));
-        if (utf8_seq[0] == 0x00) {
-            cur_error = bee_error_push(cur_error, row, col,
-                                       "buffer is %u bytes long but NULL character has "
-                                       "been found at %u bytes", data_len, pos);
+static size_t try_read_eol(const char *s) {
+    size_t i;
+    for (i = 0; i < strlen(s); i++) {
+        if (!is_first_eol(s + i)) {
             break;
         }
+    }
+    return i;
+}
 
-        size_t decoded_bytes = utf8_decode(utf8_seq, &sym);
-        if (decoded_bytes == 0) {
-            cur_error = bee_error_push(cur_error, row, col, "UTF-8 encoding error");
-            decoded_bytes = 1;
-            sym = 0xFFFD;
-        }
-        col += 1;
-
-        if (sym == 0x0000) {
+static size_t try_read_spaces(const char *s) {
+    size_t i;
+    for (i = 0; i < strlen(s); i++) {
+        if (!is_first_space(s + i)) {
             break;
         }
+    }
+    return i;
+}
 
-        if (cur_token->token_type == BEE_TT_STRING) {
-            // If we are on a string, keep reading until '"' is reached
+static size_t try_read_id(const char *s) {
+    size_t i;
+    for (i = 0; i < strlen(s); i++) {
+        if (i == 0 && !is_id_start(s)) {
+            return 0;
+        }
 
-            if (sym == '"' && !last_escaped) {
-                cur_token->len = cur_base - cur_token->base;
-                cur_token->next = bee_token_new();
-                cur_token = cur_token->next;
-                pos += decoded_bytes; // Continue after (last) '"'
+        if (!(is_first_alpha(s + i) || is_first_digit(s + i) || *(s+i) == '_' ||
+              *(s+i) == '$')) {
+            break;
+        }
+    }
+
+    return i;
+}
+
+static size_t try_read_lit_num(const char *s) {
+    size_t i;
+    for (i = 0; i < strlen(s); i++) {
+        if (!is_first_digit(s + i)) {
+            break;
+        }
+    }
+
+    if (*(s + i) == '.') {
+        i++;
+    }
+
+    for (; i < strlen(s); i++) {
+        if (!is_first_digit(s + i)) {
+            break;
+        }
+    }
+
+    return i;
+}
+
+static size_t try_read_lit_str(const char *s, enum bee_token_error *error) {
+    size_t i;
+    if (*s != '"') {
+        return 0;
+    }
+
+    size_t sl = strlen(s);
+    for (i = 1; i < sl; i++) {
+        if (*(s + i) == '\\' && i + 1 < sl) {
+            if (*(s + i + 1) == '"') {
+                i +=1 ;
                 continue;
-            }
-
-            // error: unterminated string
-            if (sym == '\n') {
-                break;
-            }
-
-            if (sym == '\\') {
-                last_escaped = true;
-            } else {
-                last_escaped = false;
-            }
-        } else if (cur_token->token_type == BEE_TT_DIGITS) {
-            // If we are on digits (or word), keep reading numbers until sym is not a number, otherwise fallthrough
-
-            if (!bee_is_digit(sym)) {
-                cur_token->len = cur_base - cur_token->base;
-                cur_token->next = bee_token_new();
-                cur_token = cur_token->next;
-                continue; // Continue reading the same sym, but without BEE_TT_DIGITS (or BEE_TT_WORD) context
-            }
-        } else if (cur_token->token_type == BEE_TT_WORD) {
-            // If we are on word, keep reading alpha until sym is not alpha anymore, otherwise fallthrough
-
-            if (!bee_is_alphanum(sym)) {
-                cur_token->len = cur_base - cur_token->base;
-                cur_token->next = bee_token_new();
-
-                // Change type to keyword if it matches any keyword
-                if (bee_is_keyword(cur_token->base, cur_token->len)) {
-                    cur_token->token_type = BEE_TT_KEYWORD;
-                }
-
-                cur_token = cur_token->next;
-                continue; // Continue reading the same sym, but without BEE_TT_WORD context
-            }
-        } else if (cur_token->token_type == BEE_TT_EOL) {
-            // If we are on EOL, keep grouping ending symbols until there is something interesting
-            if (bee_is_eol(sym)) {
-                if (sym == '\n') {
-                    row ++;
-                    col = 0L;
-                }
-            } else {
-                cur_token->len = cur_base - cur_token->base;
-                cur_token->next = bee_token_new();
-                cur_token = cur_token->next;
-                continue;
-            }
-        } else {
-            // We are not on any context, respond to whatever comes into sym
-
-            if (sym == '"') {
-                // We got a string
-                cur_token->token_type = BEE_TT_STRING;
-                cur_token->base = cur_base;
-                cur_token->col = col;
-                cur_token->row = row;
-            } else if (bee_is_eol(sym)) {
-                cur_token->token_type = BEE_TT_EOL;
-                cur_token->base = cur_base;
-                cur_token->col = col;
-                cur_token->row = row;
-            } else if (bee_is_punct(sym)) {
-                // We emit punctuation symbols one by one (even if composed) let the parser decide what operand will be used
-                cur_token->token_type = BEE_TT_PUNCT;
-                cur_token->base = cur_base;
-                cur_token->len = 1;
-                cur_token->col = col;
-                cur_token->row = row;
-                cur_token->next = bee_token_new();
-                cur_token = cur_token->next;
-            } else if (bee_is_alpha(sym)) {
-                // We got a keyword/word
-                cur_token->token_type = BEE_TT_WORD;
-                cur_token->base = cur_base;
-                cur_token->col = col;
-                cur_token->row = row;
-            } else if (bee_is_digit(sym)) {
-                // We got digits
-                cur_token->token_type = BEE_TT_DIGITS;
-                cur_token->base = cur_base;
-                cur_token->col = col;
-                cur_token->row = row;
-            } else if (!bee_is_space(sym) && sym != 0xFFFD) {
-                // We don't know what is this
-                char err_sym_data[4];
-                uint8_t err_sym_size = utf8_encode(sym, err_sym_data);
-                cur_error = bee_error_push(cur_error, col, row, "unknown token: U+%d ('%.*s')", sym, err_sym_size, err_sym_data);
             }
         }
 
-        pos += decoded_bytes;
+        if (*(s + i) == '"') {
+            break;
+        }
     }
 
-    if (cur_token->token_type == BEE_TT_STRING) {
-        bee_error_push(cur_error, col, row, "unterminated string");
-    } else if (cur_token->token_type != BEE_TT_EOF) {
-        cur_token->len = (cur_base - cur_token->base) + 1;
-        if (cur_token->token_type == BEE_TT_WORD && bee_is_keyword(cur_token->base, cur_token->len)) {
-            cur_token->token_type = BEE_TT_KEYWORD;
+    if (*(s + i) != '"') {
+        *error = BEE_TOKEN_ERROR_UNTERMINATED_STRING;
+    }
+
+    // include both '"' (starting and ending)
+    return i + 1;
+}
+
+static size_t is_string_keyword(const char *s, const size_t len,
+                                enum bee_keyword_type *keyword_type) {
+    for (size_t k = 1; k < BEE_KEYWORD_TYPES; k++) {
+        const char *keyword = keywords_table[k];
+        if (len == strlen(keyword) && strncmp(keyword, s, len) == 0) {
+            *keyword_type = k;
+            return len;
+        }
+    }
+
+    *keyword_type = 0;
+    return 0;
+}
+
+static size_t try_read_punct(const char *s, enum bee_punct_type *punct_type, enum bee_token_error *error) {
+    if (!is_first_punct(s)) {
+        *punct_type = 0;
+        return 0;
+    }
+
+    size_t s_len = strlen(s);
+    for (size_t p = 1; p < BEE_PUNCT_TYPES; p++) {
+        const char *cmp_punct = puncts_table[p];
+        const size_t cmp_len = strlen(cmp_punct);
+        if (s_len < cmp_len) {
+            continue;
         }
 
-        cur_token->next = bee_token_new();
-        cur_token = cur_token->next;
-        cur_token->token_type = BEE_TT_EOF;
-        cur_token->base = data_buf + pos;
-        cur_token->col = col;
-        cur_token->row = row;
+        if (strncmp(cmp_punct, s, cmp_len) == 0) {
+            *punct_type = p;
+            return cmp_len;
+        }
     }
+
+    *punct_type = 0;
+    *error = BEE_TOKEN_ERROR_UNKNOWN_PUNCT;
+    return 0;
+}
+
+struct bee_token bee_token_start(const char *name, const char *data) {
+    return (struct bee_token) {
+            .name = name,
+            .base = data,
+            .off = 0L,
+            .len = 0L,
+            .row = 1L,
+            .col = 0L,
+            .type = BEE_TOKEN_TYPE_NONE,
+            .error = BEE_TOKEN_ERROR_NONE,
+            .keyword_type = BEE_KEYWORD_NONE,
+            .punct_type = BEE_PUNCT_NONE,
+    };
+}
+
+struct bee_token bee_token_next(struct bee_token prev) {
+    struct bee_token cur = {
+            .name = prev.name,
+            .base = prev.base,
+            .off = prev.off + prev.len,
+            .len = 0L,
+            .row = prev.row,
+            .col = prev.col + prev.len,
+            .type = BEE_TOKEN_TYPE_EOF,
+            .keyword_type = BEE_KEYWORD_NONE,
+            .punct_type = BEE_PUNCT_NONE,
+            .error = BEE_TOKEN_ERROR_NONE,
+    };
+
+    // Return end of file
+    if (is_first_eof(cur.base + cur.off)) {
+        return cur;
+    }
+
+    // Skip spaces
+    size_t read_len = try_read_spaces(cur.base + cur.off);
+    cur.off += read_len;
+    cur.col += read_len;
+
+    // Try read end of line
+    read_len = try_read_eol(cur.base + cur.off);
+    if (read_len > 0) {
+        cur.type = BEE_TOKEN_TYPE_EOL;
+        cur.len = read_len;
+        cur.row += read_len;
+        cur.col = 0L;
+        return cur;
+    }
+
+    // Try read number
+    read_len = try_read_lit_num(cur.base + cur.off);
+    if (read_len > 0) {
+        cur.type = BEE_TOKEN_TYPE_NUMBER;
+        cur.len = read_len;
+        return cur;
+    }
+
+    // Try read string
+    read_len = try_read_lit_str(cur.base + cur.off, &cur.error);
+    if (read_len > 0) {
+        cur.type = BEE_TOKEN_TYPE_STRING;
+        cur.len = read_len;
+        return cur;
+    }
+
+    // Try read punct
+    read_len = try_read_punct(cur.base + cur.off, &cur.punct_type, &cur.error);
+    if (read_len > 0) {
+        cur.type = BEE_TOKEN_TYPE_PUNCT;
+        cur.len = read_len;
+        return cur;
+    }
+
+    // Read an id, it's a keyword or boolean if it matches any of the reserved
+    // strings
+    read_len = try_read_id(cur.base + cur.off);
+    if (is_string_keyword(cur.base + cur.off, read_len, &cur.keyword_type)) {
+        cur.type = (cur.keyword_type == BEE_KEYWORD_TRUE ||
+                    cur.keyword_type == BEE_KEYWORD_FALSE)
+                   ? BEE_TOKEN_TYPE_BOOLEAN
+                   : BEE_TOKEN_TYPE_KEYWORD;
+        cur.len = read_len;
+        return cur;
+    }
+
+    if (read_len > 0) {
+        cur.type = BEE_TOKEN_TYPE_ID;
+        cur.len = read_len;
+        return cur;
+    }
+
+    cur.len = 1L;
+    cur.error = BEE_TOKEN_ERROR_UNKNOWN_CHAR;
+    return cur;
 }

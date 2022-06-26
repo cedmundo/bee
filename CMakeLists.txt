@@ -3,48 +3,26 @@ project(bee VERSION 0.0.1 LANGUAGES C)
 
 # Include scripts
 include(cmake/FetchCMocka.cmake)
-include(FindPkgConfig)
-pkg_check_modules(LIBJIT libjit REQUIRED)
+
+macro(setup_test_target TARGET TEST_SOURCES)
+    add_executable(${TARGET} ${ARGN} ${TARGET}.c)
+    target_compile_features(${TARGET} PRIVATE c_std_99)
+    target_link_libraries(${TARGET} PRIVATE cmocka-static)
+endmacro()
 
 # Setup project variables
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 17)
 add_definitions("-Wall" "-g")
 
-set(BEE_HEADERS utf8.h error.h lexer.h parser.h)
-set(BEE_SOURCES utf8.c error.c lexer.c parser.c)
+set(BEE_HEADERS)
+set(BEE_SOURCES)
 
 # Main executable
-add_executable(bee ${BEE_HEADERS} ${BEE_SOURCES} bee.c)
-target_include_directories(bee PRIVATE ${LIBJIT_INCLUDE_DIRS})
-target_link_libraries(bee PUBLIC ${LIBJIT_LIBRARIES})
+# add_executable(bee ${BEE_HEADERS} ${BEE_SOURCES} bee.c)
+# target_include_directories(bee PRIVATE ${LIBJIT_INCLUDE_DIRS})
+# target_link_libraries(bee PUBLIC ${LIBJIT_LIBRARIES})
 
 # Testing
-add_executable(utf8_test ${BEE_HEADERS} ${BEE_SOURCES} utf8_test.c)
-target_compile_features(utf8_test PRIVATE c_std_99)
-target_link_libraries(utf8_test PRIVATE cmocka-static)
-target_include_directories(utf8_test PRIVATE ${LIBJIT_INCLUDE_DIRS})
-target_link_libraries(utf8_test PUBLIC ${LIBJIT_LIBRARIES})
-
-add_executable(error_test ${BEE_HEADERS} ${BEE_SOURCES} error_test.c)
-target_compile_features(error_test PRIVATE c_std_99)
-target_link_libraries(error_test PRIVATE cmocka-static)
-target_include_directories(error_test PRIVATE ${LIBJIT_INCLUDE_DIRS})
-target_link_libraries(error_test PUBLIC ${LIBJIT_LIBRARIES})
-
-add_executable(lexer_test ${BEE_HEADERS} ${BEE_SOURCES} lexer_test.c)
-target_compile_features(lexer_test PRIVATE c_std_99)
-target_link_libraries(lexer_test PRIVATE cmocka-static)
-target_include_directories(lexer_test PRIVATE ${LIBJIT_INCLUDE_DIRS})
-target_link_libraries(lexer_test PUBLIC ${LIBJIT_LIBRARIES})
-
-add_executable(parser_test ${BEE_HEADERS} ${BEE_SOURCES} parser_test.c)
-target_compile_features(parser_test PRIVATE c_std_99)
-target_link_libraries(parser_test PRIVATE cmocka-static)
-target_include_directories(parser_test PRIVATE ${LIBJIT_INCLUDE_DIRS})
-target_link_libraries(parser_test PUBLIC ${LIBJIT_LIBRARIES})
-
 enable_testing()
-add_test(NAME utf8_test COMMAND utf8_test)
-add_test(NAME error_test COMMAND error_test)
+setup_test_target(lexer_test lexer.h lexer.c)
 add_test(NAME lexer_test COMMAND lexer_test)
-add_test(NAME parser_test COMMAND parser_test)
