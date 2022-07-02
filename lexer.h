@@ -64,6 +64,7 @@ enum bee_keyword_type {
 
 enum bee_punct_type {
     BEE_PUNCT_NONE,
+    BEE_PUNCT_RANGE,
     BEE_PUNCT_WALRUS,
     BEE_PUNCT_EQ,
     BEE_PUNCT_NE,
@@ -73,7 +74,6 @@ enum bee_punct_type {
     BEE_PUNCT_LOG_OR,
     BEE_PUNCT_BIT_RSH,
     BEE_PUNCT_BIT_LSH,
-    BEE_PUNCT_RANGE,
     BEE_PUNCT_ADD,
     BEE_PUNCT_SUB,
     BEE_PUNCT_MUL,

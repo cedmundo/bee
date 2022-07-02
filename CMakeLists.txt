@@ -26,3 +26,7 @@ set(BEE_SOURCES)
 enable_testing()
 setup_test_target(lexer_test lexer.h lexer.c)
 add_test(NAME lexer_test COMMAND lexer_test)
+
+enable_testing()
+setup_test_target(parser_test lexer.h lexer.c parser.h parser.c)
+add_test(NAME parser_test COMMAND parser_test)
