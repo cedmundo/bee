@@ -82,6 +82,7 @@ struct bee_parser_error {
 };
 
 struct bee_ast_node {
+    const char *filename;
     union {
         struct {
             struct bee_ast_node *left;
@@ -100,11 +101,14 @@ struct bee_ast_node {
         double as_f64;
         bool as_bol;
     };
-    struct bee_token token;
+    size_t row;
+    size_t col;
     enum bee_ast_node_type type;
 };
 
 struct bee_ast_node *bee_ast_node_new();
+struct bee_ast_node *bee_ast_node_new_unary(struct bee_token at_token, enum bee_ast_node_type type, struct bee_ast_node *left);
+struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee_ast_node_type type, struct bee_ast_node *left, struct bee_ast_node *right);
 
 void bee_ast_node_free(struct bee_ast_node *node);
 
@@ -140,11 +144,9 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 // add = mul ('+' mul | '-' mul)*
 // struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_error *error);
 
-// mul = unary ('*' unary | '/' unary | '%' unary)*
-// struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error);
 
+struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error);
-
 struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser_error *error);
 
 #endif //BEE_PARSER_H

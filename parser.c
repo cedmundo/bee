@@ -1,9 +1,10 @@
 //
 // Created by carlos on 6/25/22.
 //
+#include <assert.h>
 #include <stdbool.h>
-#include <jit/jit-util.h>
 #include <stdlib.h>
+#include <jit/jit-util.h>
 
 #include "lexer.h"
 #include "parser.h"
@@ -57,8 +58,33 @@ struct bee_ast_node *bee_ast_node_new() {
     return jit_calloc(1, sizeof(struct bee_ast_node));
 }
 
+struct bee_ast_node *bee_ast_node_new_unary(struct bee_token at_token,
+                                            enum bee_ast_node_type type, struct bee_ast_node *left) {
+    assert(type >= BEE_AST_NODE_UNA_LOG_NEG && type <= BEE_AST_NODE_UNA_DEREF);
+    struct bee_ast_node *node = bee_ast_node_new();
+    node->type = type;
+    node->filename = at_token.name;
+    node->row = at_token.row;
+    node->col = at_token.col;
+    node->left = left;
+    return node;
+}
+
+struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee_ast_node_type type,
+                                             struct bee_ast_node *left, struct bee_ast_node *right) {
+    assert(type >= BEE_AST_NODE_BIN_ADD && type <= BEE_AST_NODE_BIN_COMMA);
+    struct bee_ast_node *node = bee_ast_node_new();
+    node->type = type;
+    node->filename = at_token.name;
+    node->row = at_token.row;
+    node->col = at_token.col;
+    node->left = left;
+    node->right = right;
+    return node;
+}
+
 void bee_ast_node_free(struct bee_ast_node *node) {
-    switch(node->type) {
+    switch (node->type) {
         case BEE_AST_NODE_LIT_STR:
         case BEE_AST_NODE_ID:
             if (node->as_str != NULL) {
@@ -75,13 +101,72 @@ void bee_ast_node_free(struct bee_ast_node *node) {
                 bee_ast_node_free(node->left);
             }
             break;
+        case BEE_AST_NODE_BIN_ADD:
+        case BEE_AST_NODE_BIN_SUB:
+        case BEE_AST_NODE_BIN_MUL:
+        case BEE_AST_NODE_BIN_DIV:
+        case BEE_AST_NODE_BIN_REM:
+        case BEE_AST_NODE_BIN_EQ:
+        case BEE_AST_NODE_BIN_NE:
+        case BEE_AST_NODE_BIN_GT:
+        case BEE_AST_NODE_BIN_GE:
+        case BEE_AST_NODE_BIN_LT:
+        case BEE_AST_NODE_BIN_LE:
+        case BEE_AST_NODE_BIN_LSH:
+        case BEE_AST_NODE_BIN_RSH:
+        case BEE_AST_NODE_BIN_BIT_AND:
+        case BEE_AST_NODE_BIN_BIT_OR:
+        case BEE_AST_NODE_BIN_BIT_XOR:
+        case BEE_AST_NODE_BIN_LOG_AND:
+        case BEE_AST_NODE_BIN_LOG_OR:
+        case BEE_AST_NODE_BIN_AS:
+        case BEE_AST_NODE_BIN_IS:
+        case BEE_AST_NODE_BIN_IS_NOT:
+        case BEE_AST_NODE_BIN_IN:
+        case BEE_AST_NODE_BIN_NOT_IN:
+        case BEE_AST_NODE_BIN_MATCHES:
+        case BEE_AST_NODE_BIN_NOT_MATCHES:
+        case BEE_AST_NODE_BIN_INP_ADD:
+        case BEE_AST_NODE_BIN_INP_SUB:
+        case BEE_AST_NODE_BIN_INP_MUL:
+        case BEE_AST_NODE_BIN_INP_DIV:
+        case BEE_AST_NODE_BIN_INP_BIT_AND:
+        case BEE_AST_NODE_BIN_INP_BIT_OR:
+        case BEE_AST_NODE_BIN_INP_LOG_AND:
+        case BEE_AST_NODE_BIN_INP_LOG_OR:
+        case BEE_AST_NODE_BIN_INP_LSH:
+        case BEE_AST_NODE_BIN_INP_RSH:
+        case BEE_AST_NODE_BIN_ACCESS:
+        case BEE_AST_NODE_BIN_RANGE:
+        case BEE_AST_NODE_BIN_COMMA:
+            if (node->left != NULL) {
+                bee_ast_node_free(node->left);
+            }
+
+            if (node->right != NULL) {
+                bee_ast_node_free(node->right);
+            }
+            break;
+        case BEE_AST_NODE_NONE:
+        case BEE_AST_NODE_LIT_BOL:
+        case BEE_AST_NODE_LIT_I8:
+        case BEE_AST_NODE_LIT_I16:
+        case BEE_AST_NODE_LIT_I32:
+        case BEE_AST_NODE_LIT_I64:
+        case BEE_AST_NODE_LIT_U8:
+        case BEE_AST_NODE_LIT_U16:
+        case BEE_AST_NODE_LIT_U32:
+        case BEE_AST_NODE_LIT_U64:
+        case BEE_AST_NODE_LIT_F32:
+        case BEE_AST_NODE_LIT_F64:
+            break;
     }
 
     jit_free(node);
 }
 
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error) {
-    return bee_parse_unary(rest, error);
+    return bee_parse_mul(rest, error);
 }
 
 // struct bee_ast_node *bee_parse_bit_log_or(struct bee_token *rest, struct bee_parser_error *error) {}
@@ -101,54 +186,73 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 // struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_error *error) {}
 //
 // struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_error *error) {}
-//
-// struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error) {}
+
+// mul = unary ('*' unary | '/' unary | '%' unary)*
+struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error) {
+    struct bee_ast_node *node = bee_parse_unary(rest, error);
+    if (error->type != BEE_PARSER_ERROR_NONE) {
+        return node;
+    }
+
+    for (;;) {
+        if (match_punct(*rest, BEE_PUNCT_MUL)) {
+            struct bee_token token = consume(rest);
+            node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_MUL, node, bee_parse_unary(rest, error));
+            if (error->type != BEE_PARSER_ERROR_NONE) {
+                return node;
+            }
+            continue;
+        }
+
+        if (match_punct(*rest, BEE_PUNCT_DIV)) {
+            struct bee_token token = consume(rest);
+            node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_DIV, node, bee_parse_unary(rest, error));
+            if (error->type != BEE_PARSER_ERROR_NONE) {
+                return node;
+            }
+            continue;
+        }
+
+        if (match_punct(*rest, BEE_PUNCT_REM)) {
+            struct bee_token token = consume(rest);
+            node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_REM, node, bee_parse_unary(rest, error));
+            if (error->type != BEE_PARSER_ERROR_NONE) {
+                return node;
+            }
+            continue;
+        }
+
+        break;
+    }
+
+    return node;
+}
 
 // unary = primary | ('+' | '-' | '*' | '&' | '~') unary
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error) {
     if (match_punct(*rest, BEE_PUNCT_ADD)) {
         struct bee_token token = consume(rest);
-        struct bee_ast_node *node = bee_ast_node_new();
-        node->type = BEE_AST_NODE_UNA_ARI_POS;
-        node->token = token;
-        node->left = bee_parse_unary(rest, error);
-        return node;
+        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_ARI_POS, bee_parse_unary(rest, error));
     }
 
     if (match_punct(*rest, BEE_PUNCT_SUB)) {
         struct bee_token token = consume(rest);
-        struct bee_ast_node *node = bee_ast_node_new();
-        node->type = BEE_AST_NODE_UNA_ARI_NEG;
-        node->token = token;
-        node->left = bee_parse_unary(rest, error);
-        return node;
+        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_ARI_NEG, bee_parse_unary(rest, error));
     }
 
     if (match_punct(*rest, BEE_PUNCT_MUL)) {
         struct bee_token token = consume(rest);
-        struct bee_ast_node *node = bee_ast_node_new();
-        node->type = BEE_AST_NODE_UNA_DEREF;
-        node->token = token;
-        node->left = bee_parse_unary(rest, error);
-        return node;
+        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_DEREF, bee_parse_unary(rest, error));
     }
 
     if (match_punct(*rest, BEE_PUNCT_BIT_AND)) {
         struct bee_token token = consume(rest);
-        struct bee_ast_node *node = bee_ast_node_new();
-        node->type = BEE_AST_NODE_UNA_REF;
-        node->token = token;
-        node->left = bee_parse_unary(rest, error);
-        return node;
+        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_REF, bee_parse_unary(rest, error));
     }
 
     if (match_punct(*rest, BEE_PUNCT_BIT_NEG)) {
         struct bee_token token = consume(rest);
-        struct bee_ast_node *node = bee_ast_node_new();
-        node->type = BEE_AST_NODE_UNA_BIT_NEG;
-        node->token = token;
-        node->left = bee_parse_unary(rest, error);
-        return node;
+        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_BIT_NEG, bee_parse_unary(rest, error));
     }
 
     return bee_parse_primary(rest, error);
@@ -170,25 +274,32 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
         struct bee_token id_data = consume(rest);
         struct bee_ast_node *node = bee_ast_node_new();
         node->type = BEE_AST_NODE_ID;
-        node->token = id_data;
-        node->as_str = jit_calloc(id_data.len+1, sizeof(char));
+        node->filename = id_data.name;
+        node->row = id_data.row;
+        node->col = id_data.col;
+        node->as_str = jit_calloc(id_data.len + 1, sizeof(char));
         jit_memcpy(node->as_str, id_data.data + id_data.off, id_data.len);
         return node;
     } else if (match_type(*rest, BEE_TOKEN_TYPE_BOOLEAN)) {
         struct bee_token bol_data = consume(rest);
         struct bee_ast_node *node = bee_ast_node_new();
         node->type = BEE_AST_NODE_LIT_BOL;
-        node->token = bol_data;
+        node->filename = bol_data.name;
+        node->row = bol_data.row;
+        node->col = bol_data.col;
         node->as_bol = bol_data.keyword_type == BEE_KEYWORD_TRUE;
         return node;
     } else if (match_type(*rest, BEE_TOKEN_TYPE_NUMBER)) {
         struct bee_token num_data = consume(rest);
         struct bee_ast_node *node = bee_ast_node_new();
-        node->token = num_data;
+        node->filename = num_data.name;
+        node->row = num_data.row;
+        node->col = num_data.col;
         int8_t neg = *(num_data.data + num_data.off) == '-' ? -1 : 1;
-        const char *digits = num_data.data + num_data.off + (num_data.num_base == BEE_NUM_BASE_DEC ? (neg < 0 ? 1 : 0) : 2);
+        const char *digits =
+                num_data.data + num_data.off + (num_data.num_base == BEE_NUM_BASE_DEC ? (neg < 0 ? 1 : 0) : 2);
         int base_value[] = {[BEE_NUM_BASE_DEC] = 10, [BEE_NUM_BASE_HEX] = 16,
-                            [BEE_NUM_BASE_OCT] = 8, [BEE_NUM_BASE_BIN] = 2};
+                [BEE_NUM_BASE_OCT] = 8, [BEE_NUM_BASE_BIN] = 2};
         switch (num_data.num_type) {
             case BEE_NUM_TYPE_U8:
                 node->type = BEE_AST_NODE_LIT_U8;
@@ -224,11 +335,11 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
                 break;
             case BEE_NUM_TYPE_F32:
                 node->type = BEE_AST_NODE_LIT_F32;
-                node->as_f32 = strtof(digits, NULL) * (float)neg;
+                node->as_f32 = strtof(digits, NULL) * (float) neg;
                 break;
             case BEE_NUM_TYPE_F64:
                 node->type = BEE_AST_NODE_LIT_F64;
-                node->as_f64 = strtod(digits, NULL) * (double)neg;
+                node->as_f64 = strtod(digits, NULL) * (double) neg;
                 break;
         }
         return node;
@@ -236,7 +347,9 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
         struct bee_token str_data = consume(rest);
         struct bee_ast_node *node = bee_ast_node_new();
         node->type = BEE_AST_NODE_LIT_STR;
-        node->token = str_data;
+        node->filename = str_data.name;
+        node->row = str_data.row;
+        node->col = str_data.col;
         node->as_str = jit_calloc(str_data.len + 1, sizeof(char));
         jit_memcpy(node->as_str, str_data.data + str_data.off, str_data.len);
         return node;
