@@ -209,6 +209,33 @@ static void test_parse_mul(void **state) {
     aux0 = aux1->left;
     assert_int_equal(aux0->type, BEE_AST_NODE_ID);
     assert_string_equal("b", aux0->as_str);
+
+    start = bee_token_start("test", "a * (b / c)");
+    token = bee_token_next(start);
+    node = bee_parse_mul(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_BIN_MUL);
+
+    aux0 = node->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal("a", aux0->as_str);
+
+    aux1 = node->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_BIN_DIV);
+
+    aux0 = aux1->right;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal("c", aux0->as_str);
+
+    aux1 = aux1->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("b", aux1->as_str);
+    bee_ast_node_free(node);
 }
 
 int main() {
