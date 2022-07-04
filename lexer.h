@@ -23,6 +23,7 @@ enum bee_token_error {
     BEE_TOKEN_ERROR_UNKNOWN_CHAR,
     BEE_TOKEN_ERROR_UNTERMINATED_STRING,
     BEE_TOKEN_ERROR_UNKNOWN_PUNCT,
+    BEE_TOKEN_ERROR_UNSUPPORTED_NUM_BASE,
 };
 
 enum bee_keyword_type {
@@ -89,8 +90,8 @@ enum bee_punct_type {
     BEE_PUNCT_ARI_NEG,
     BEE_PUNCT_ASSIGN,
     BEE_PUNCT_COLON,
-    BEE_PUNCT_LP,
-    BEE_PUNCT_RP,
+    BEE_PUNCT_LPAR,
+    BEE_PUNCT_RPAR,
     BEE_PUNCT_LSB,
     BEE_PUNCT_RSB,
     BEE_PUNCT_LCB,
@@ -98,9 +99,29 @@ enum bee_punct_type {
     BEE_PUNCT_TYPES
 };
 
+enum bee_num_base {
+    BEE_NUM_BASE_DEC,
+    BEE_NUM_BASE_HEX,
+    BEE_NUM_BASE_OCT,
+    BEE_NUM_BASE_BIN,
+};
+
+enum bee_num_type {
+    BEE_NUM_TYPE_I8,
+    BEE_NUM_TYPE_I16,
+    BEE_NUM_TYPE_I32,
+    BEE_NUM_TYPE_I64,
+    BEE_NUM_TYPE_U8,
+    BEE_NUM_TYPE_U16,
+    BEE_NUM_TYPE_U32,
+    BEE_NUM_TYPE_U64,
+    BEE_NUM_TYPE_F32,
+    BEE_NUM_TYPE_F64,
+};
+
 struct bee_token {
     const char *name;
-    const char *base;
+    const char *data;
     size_t off;
     size_t len;
     size_t row;
@@ -109,6 +130,8 @@ struct bee_token {
     enum bee_token_error error;
     enum bee_keyword_type keyword_type;
     enum bee_punct_type punct_type;
+    enum bee_num_base num_base;
+    enum bee_num_type num_type;
 };
 
 struct bee_token bee_token_start(const char *name, const char *data);

@@ -4,10 +4,16 @@ project(bee VERSION 0.0.1 LANGUAGES C)
 # Include scripts
 include(cmake/FetchCMocka.cmake)
 
+# For libjit
+find_package(PkgConfig)
+pkg_check_modules(LIBJIT REQUIRED libjit)
+
 macro(setup_test_target TARGET TEST_SOURCES)
     add_executable(${TARGET} ${ARGN} ${TARGET}.c)
+    target_compile_options(${TARGET} PUBLIC ${LIBJIT_CFLAGS_OTHER})
     target_compile_features(${TARGET} PRIVATE c_std_99)
-    target_link_libraries(${TARGET} PRIVATE cmocka-static)
+    target_include_directories(${TARGET} PUBLIC ${LIBJIT_INCLUDE_DIRS})
+    target_link_libraries(${TARGET} PRIVATE cmocka-static ${LIBJIT_LIBRARIES})
 endmacro()
 
 # Setup project variables

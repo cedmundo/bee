@@ -16,26 +16,62 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
     assert_int_equal(token.len, 3);
-    assert_memory_equal(token.base + token.off, "123", token.len);
+    assert_memory_equal(token.data + token.off, "123", token.len);
 
     token = bee_token_start("test_tokenize", "12.12");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
     assert_int_equal(token.len, 5);
-    assert_memory_equal(token.base + token.off, "12.12", token.len);
+    assert_memory_equal(token.data + token.off, "12.12", token.len);
 
     token = bee_token_start("test_tokenize", "12 21");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
     assert_int_equal(token.len, 2);
-    assert_memory_equal(token.base + token.off, "12", token.len);
+    assert_memory_equal(token.data + token.off, "12", token.len);
 
     token = bee_token_next(token);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
     assert_int_equal(token.len, 2);
-    assert_memory_equal(token.base + token.off, "21", token.len);
+    assert_memory_equal(token.data + token.off, "21", token.len);
+
+    token = bee_token_start("test_tokenize", "-10");
+    token = bee_token_next(token);
+    assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
+    assert_int_equal(token.len, 3);
+    assert_memory_equal(token.data + token.off, "-10", token.len);
+
+    token = bee_token_start("test_tokenize", "10.10");
+    token = bee_token_next(token);
+    assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
+    assert_int_equal(token.len, 5);
+    assert_memory_equal(token.data + token.off, "10.10", token.len);
+
+    token = bee_token_start("test_tokenize", "10.10_f32");
+    token = bee_token_next(token);
+    assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
+    assert_int_equal(token.len, 9);
+    assert_memory_equal(token.data + token.off, "10.10_f32", token.len);
+
+    token = bee_token_start("test_tokenize", "0xFA");
+    token = bee_token_next(token);
+    assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
+    assert_int_equal(token.len, 4);
+    assert_memory_equal(token.data + token.off, "0xFA", token.len);
+
+    token = bee_token_start("test_tokenize", "-0xFA");
+    token = bee_token_next(token);
+    assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
+    assert_int_equal(token.len, 5);
+    assert_memory_equal(token.data + token.off, "-0xFA", token.len);
+
+    token = bee_token_start("test_tokenize", "-0b10_u8");
+    token = bee_token_next(token);
+    assert_int_equal(token.type, BEE_TOKEN_TYPE_NUMBER);
+    assert_int_equal(token.len, 8);
+    assert_memory_equal(token.data + token.off, "-0b10_u8", token.len);
 }
 
 static void test_tokenize_str(void **state) {
@@ -47,21 +83,21 @@ static void test_tokenize_str(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_STRING);
     assert_int_equal(token.len, 10);
-    assert_memory_equal(token.base + token.off, "\"a string\"", token.len);
+    assert_memory_equal(token.data + token.off, "\"a string\"", token.len);
 
     token = bee_token_start("test_tokenize", "\"\"");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_STRING);
     assert_int_equal(token.len, 2);
-    assert_memory_equal(token.base + token.off, "\"\"", token.len);
+    assert_memory_equal(token.data + token.off, "\"\"", token.len);
 
     token = bee_token_start("test_tokenize", "\"\\\"\"");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_STRING);
     assert_int_equal(token.len, 4);
-    assert_memory_equal(token.base + token.off, "\"\\\"\"", token.len);
+    assert_memory_equal(token.data + token.off, "\"\\\"\"", token.len);
 
     token = bee_token_start("test_tokenize", "\"not terminated");
     token = bee_token_next(token);
@@ -73,13 +109,13 @@ static void test_tokenize_str(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_STRING);
     assert_int_equal(token.len, 3);
-    assert_memory_equal(token.base + token.off, "\"a\"", token.len);
+    assert_memory_equal(token.data + token.off, "\"a\"", token.len);
 
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_STRING);
     assert_int_equal(token.len, 3);
-    assert_memory_equal(token.base + token.off, "\"b\"", token.len);
+    assert_memory_equal(token.data + token.off, "\"b\"", token.len);
 }
 
 static void test_tokenize_punct(void **state) {
@@ -91,28 +127,28 @@ static void test_tokenize_punct(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_PUNCT);
     assert_int_equal(token.len, 1);
-    assert_memory_equal(token.base + token.off, "+", token.len);
+    assert_memory_equal(token.data + token.off, "+", token.len);
     assert_int_equal(token.punct_type, BEE_PUNCT_ADD);
 
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_PUNCT);
     assert_int_equal(token.len, 1);
-    assert_memory_equal(token.base + token.off, "-", token.len);
+    assert_memory_equal(token.data + token.off, "-", token.len);
     assert_int_equal(token.punct_type, BEE_PUNCT_SUB);
 
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_PUNCT);
     assert_int_equal(token.len, 1);
-    assert_memory_equal(token.base + token.off, "*", token.len);
+    assert_memory_equal(token.data + token.off, "*", token.len);
     assert_int_equal(token.punct_type, BEE_PUNCT_MUL);
 
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_PUNCT);
     assert_int_equal(token.len, 1);
-    assert_memory_equal(token.base + token.off, "/", token.len);
+    assert_memory_equal(token.data + token.off, "/", token.len);
     assert_int_equal(token.punct_type, BEE_PUNCT_DIV);
 
     token = bee_token_start("test_tokenize", "===");
@@ -120,14 +156,14 @@ static void test_tokenize_punct(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_PUNCT);
     assert_int_equal(token.len, 2);
-    assert_memory_equal(token.base + token.off, "==", token.len);
+    assert_memory_equal(token.data + token.off, "==", token.len);
     assert_int_equal(token.punct_type, BEE_PUNCT_EQ);
 
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_PUNCT);
     assert_int_equal(token.len, 1);
-    assert_memory_equal(token.base + token.off, "=", token.len);
+    assert_memory_equal(token.data + token.off, "=", token.len);
     assert_int_equal(token.punct_type, BEE_PUNCT_ASSIGN);
 }
 
@@ -140,7 +176,7 @@ static void test_tokenize_keyword(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_KEYWORD);
     assert_int_equal(token.len, 8);
-    assert_memory_equal(token.base + token.off, "function", token.len);
+    assert_memory_equal(token.data + token.off, "function", token.len);
     assert_int_equal(token.keyword_type, BEE_KEYWORD_FUNCTION);
 
     token = bee_token_start("test_tokenize", "tend");
@@ -163,28 +199,28 @@ static void test_tokenize_id(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_ID);
     assert_int_equal(token.len, 6);
-    assert_memory_equal(token.base + token.off, "a_name", token.len);
+    assert_memory_equal(token.data + token.off, "a_name", token.len);
 
     token = bee_token_start("test_tokenize", "a");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_ID);
     assert_int_equal(token.len, 1);
-    assert_memory_equal(token.base + token.off, "a", token.len);
+    assert_memory_equal(token.data + token.off, "a", token.len);
 
     token = bee_token_start("test_tokenize", "_a");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_ID);
     assert_int_equal(token.len, 2);
-    assert_memory_equal(token.base + token.off, "_a", token.len);
+    assert_memory_equal(token.data + token.off, "_a", token.len);
 
     token = bee_token_start("test_tokenize", "$a");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_ID);
     assert_int_equal(token.len, 2);
-    assert_memory_equal(token.base + token.off, "$a", token.len);
+    assert_memory_equal(token.data + token.off, "$a", token.len);
 }
 
 static void test_tokenize_bol(void **state) {
@@ -196,28 +232,28 @@ static void test_tokenize_bol(void **state) {
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_BOOLEAN);
     assert_int_equal(token.len, 4);
-    assert_memory_equal(token.base + token.off, "true", token.len);
+    assert_memory_equal(token.data + token.off, "true", token.len);
 
     token = bee_token_start("test_tokenize", "false");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_BOOLEAN);
     assert_int_equal(token.len, 5);
-    assert_memory_equal(token.base + token.off, "false", token.len);
+    assert_memory_equal(token.data + token.off, "false", token.len);
 
     token = bee_token_start("test_tokenize", "trued");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_ID);
     assert_int_equal(token.len, 5);
-    assert_memory_equal(token.base + token.off, "trued", token.len);
+    assert_memory_equal(token.data + token.off, "trued", token.len);
 
     token = bee_token_start("test_tokenize", "_true");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_ID);
     assert_int_equal(token.len, 5);
-    assert_memory_equal(token.base + token.off, "_true", token.len);
+    assert_memory_equal(token.data + token.off, "_true", token.len);
 }
 
 int main() {
