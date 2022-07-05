@@ -166,7 +166,7 @@ void bee_ast_node_free(struct bee_ast_node *node) {
 }
 
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error) {
-    return bee_parse_bit_and(rest, error);
+    return bee_parse_bit_xor(rest, error);
 }
 
 // struct bee_ast_node *bee_parse_bit_log_or(struct bee_token *rest, struct bee_parser_error *error) {}
@@ -178,8 +178,29 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 // struct bee_ast_node *bee_parse_bit_rel(struct bee_token *rest, struct bee_parser_error *error) {}
 //
 // struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error) {}
-//
-// struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error) {}
+
+// bit_xor = bit_and ('^' bit_and)*
+struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error) {
+    struct bee_ast_node *node = bee_parse_bit_and(rest, error);
+    if (error->type != BEE_PARSER_ERROR_NONE) {
+        return node;
+    }
+
+    for (;;) {
+        if (match_punct(*rest, BEE_PUNCT_BIT_XOR)) {
+            struct bee_token token = consume(rest);
+            node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_XOR, node, bee_parse_bit_and(rest, error));
+            if (error->type != BEE_PARSER_ERROR_NONE) {
+                return node;
+            }
+            continue;
+        }
+
+        break;
+    }
+
+    return node;
+}
 
 // bit_and = shift ('&' shift)*
 struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser_error *error) {

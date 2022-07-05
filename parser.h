@@ -132,9 +132,7 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 // bit_or = bit_xor ('|' bit_xor)*
 // struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error);
 
-// bit_xor = bit_and ('^' bit_and)*
-// struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error);
-
+struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_error *error);

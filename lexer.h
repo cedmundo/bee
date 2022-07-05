@@ -81,6 +81,7 @@ enum bee_punct_type {
     BEE_PUNCT_DIV,
     BEE_PUNCT_REM,
     BEE_PUNCT_BIT_AND,
+    BEE_PUNCT_BIT_XOR,
     BEE_PUNCT_BIT_OR,
     BEE_PUNCT_AT,
     BEE_PUNCT_DOT,
