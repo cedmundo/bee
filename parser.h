@@ -129,9 +129,7 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 //                  | 'in' bit_or | 'not' 'in' bit_or | 'matches' bit_or | 'not' 'matches' bit_or)*
 // struct bee_ast_node *bee_parse_bit_rel(struct bee_token *rest, struct bee_parser_error *error);
 
-// bit_or = bit_xor ('|' bit_xor)*
-// struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error);
-
+struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_error *error);
