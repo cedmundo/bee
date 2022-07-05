@@ -345,29 +345,103 @@ static void test_parse_shift(void **state) {
     struct bee_parser_error error = {0LL};
     struct bee_ast_node *node, *aux0, *aux1;
 
-    start = bee_token_start("test", "a >> b << c");
+    start = bee_token_start("test", "a + b << c - d >> f");
     token = bee_token_next(start);
     node = bee_parse_shift(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
-    assert_int_equal(node->type, BEE_AST_NODE_BIN_LSH);
+    assert_int_equal(node->type, BEE_AST_NODE_BIN_RSH);
 
     aux0 = node->right;
     assert_non_null(aux0);
     assert_int_equal(aux0->type, BEE_AST_NODE_ID);
-    assert_string_equal("c", aux0->as_str);
+    assert_string_equal("f", aux0->as_str);
 
     aux1 = node->left;
     assert_non_null(aux1);
-    assert_int_equal(aux1->type, BEE_AST_NODE_BIN_RSH);
+    assert_int_equal(aux1->type, BEE_AST_NODE_BIN_LSH);
 
     aux0 = aux1->left;
-    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
-    assert_string_equal("a", aux0->as_str);
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_BIN_ADD);
 
-    aux0 = aux1->right;
+    aux1 = aux0->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("a", aux1->as_str);
+
+    aux1 = aux0->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("b", aux1->as_str);
+
+    aux0 = node->left->right;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_BIN_SUB);
+
+    aux1 = aux0->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("c", aux1->as_str);
+
+    aux1 = aux0->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("d", aux1->as_str);
+    bee_ast_node_free(node);
+}
+
+static void test_parse_bit_and(void **state) {
+    (void) state;
+
+    struct bee_token start;
+    struct bee_token token;
+    struct bee_parser_error error = {0LL};
+    struct bee_ast_node *node, *aux0, *aux1;
+
+    start = bee_token_start("test", "a << b & c >> d & f");
+    token = bee_token_next(start);
+    node = bee_parse_bit_and(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_BIN_BIT_AND);
+
+    aux0 = node->right;
+    assert_non_null(aux0);
     assert_int_equal(aux0->type, BEE_AST_NODE_ID);
-    assert_string_equal("b", aux0->as_str);
+    assert_string_equal("f", aux0->as_str);
+
+    aux1 = node->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_BIN_BIT_AND);
+
+    aux0 = aux1->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_BIN_LSH);
+
+    aux1 = aux0->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("a", aux1->as_str);
+
+    aux1 = aux0->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("b", aux1->as_str);
+
+    aux0 = node->left->right;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_BIN_RSH);
+
+    aux1 = aux0->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("c", aux1->as_str);
+
+    aux1 = aux0->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal("d", aux1->as_str);
     bee_ast_node_free(node);
 }
 
@@ -378,6 +452,7 @@ int main() {
             cmocka_unit_test(test_parse_mul),
             cmocka_unit_test(test_parse_add),
             cmocka_unit_test(test_parse_shift),
+            cmocka_unit_test(test_parse_bit_and),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
