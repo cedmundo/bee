@@ -185,7 +185,7 @@ struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_
     }
 
     for (;;) {
-        if (match_punct(*rest, BEE_PUNCT_BIT_OR)) {
+        if (match_punct(*rest, BEE_PUNCT_VBAR)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_OR, node, bee_parse_bit_xor(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -208,7 +208,7 @@ struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser
     }
 
     for (;;) {
-        if (match_punct(*rest, BEE_PUNCT_BIT_XOR)) {
+        if (match_punct(*rest, BEE_PUNCT_CARET)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_XOR, node, bee_parse_bit_and(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -231,7 +231,7 @@ struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser
     }
 
     for (;;) {
-        if (match_punct(*rest, BEE_PUNCT_BIT_AND)) {
+        if (match_punct(*rest, BEE_PUNCT_AMPERSAND)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_AND, node, bee_parse_shift(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -254,7 +254,7 @@ struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_e
     }
 
     for (;;) {
-        if (match_punct(*rest, BEE_PUNCT_BIT_LSH)) {
+        if (match_punct(*rest, BEE_PUNCT_D_LT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LSH, node, bee_parse_add(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -263,7 +263,7 @@ struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_e
             continue;
         }
 
-        if (match_punct(*rest, BEE_PUNCT_BIT_RSH)) {
+        if (match_punct(*rest, BEE_PUNCT_D_GT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_RSH, node, bee_parse_add(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -286,7 +286,7 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
     }
 
     for (;;) {
-        if (match_punct(*rest, BEE_PUNCT_ADD)) {
+        if (match_punct(*rest, BEE_PUNCT_PLUS)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_ADD, node, bee_parse_mul(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -295,7 +295,7 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
             continue;
         }
 
-        if (match_punct(*rest, BEE_PUNCT_SUB)) {
+        if (match_punct(*rest, BEE_PUNCT_MINUS)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_SUB, node, bee_parse_mul(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -318,7 +318,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
     }
 
     for (;;) {
-        if (match_punct(*rest, BEE_PUNCT_MUL)) {
+        if (match_punct(*rest, BEE_PUNCT_ASTERISK)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_MUL, node, bee_parse_unary(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -327,7 +327,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
             continue;
         }
 
-        if (match_punct(*rest, BEE_PUNCT_DIV)) {
+        if (match_punct(*rest, BEE_PUNCT_SLASH)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_DIV, node, bee_parse_unary(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -336,7 +336,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
             continue;
         }
 
-        if (match_punct(*rest, BEE_PUNCT_REM)) {
+        if (match_punct(*rest, BEE_PUNCT_PERCENT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_REM, node, bee_parse_unary(rest, error));
             if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -353,27 +353,27 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
 
 // unary = primary | ('+' | '-' | '*' | '&' | '~') unary
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error) {
-    if (match_punct(*rest, BEE_PUNCT_ADD)) {
+    if (match_punct(*rest, BEE_PUNCT_PLUS)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_ARI_POS, bee_parse_unary(rest, error));
     }
 
-    if (match_punct(*rest, BEE_PUNCT_SUB)) {
+    if (match_punct(*rest, BEE_PUNCT_MINUS)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_ARI_NEG, bee_parse_unary(rest, error));
     }
 
-    if (match_punct(*rest, BEE_PUNCT_MUL)) {
+    if (match_punct(*rest, BEE_PUNCT_ASTERISK)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_DEREF, bee_parse_unary(rest, error));
     }
 
-    if (match_punct(*rest, BEE_PUNCT_BIT_AND)) {
+    if (match_punct(*rest, BEE_PUNCT_AMPERSAND)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_REF, bee_parse_unary(rest, error));
     }
 
-    if (match_punct(*rest, BEE_PUNCT_BIT_NEG)) {
+    if (match_punct(*rest, BEE_PUNCT_TILDE)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_BIT_NEG, bee_parse_unary(rest, error));
     }
