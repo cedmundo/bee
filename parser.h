@@ -138,9 +138,7 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 // bit_and = shift ('&' shift)*
 // struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser_error *error);
 
-// shift = add ('>>' add | '<<' add)*
-// struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_error *error);
-
+struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error);

@@ -337,12 +337,47 @@ static void test_parse_add(void **state) {
     bee_ast_node_free(node);
 }
 
+static void test_parse_shift(void **state) {
+    (void) state;
+
+    struct bee_token start;
+    struct bee_token token;
+    struct bee_parser_error error = {0LL};
+    struct bee_ast_node *node, *aux0, *aux1;
+
+    start = bee_token_start("test", "a >> b << c");
+    token = bee_token_next(start);
+    node = bee_parse_shift(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_BIN_LSH);
+
+    aux0 = node->right;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal("c", aux0->as_str);
+
+    aux1 = node->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_BIN_RSH);
+
+    aux0 = aux1->left;
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal("a", aux0->as_str);
+
+    aux0 = aux1->right;
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal("b", aux0->as_str);
+    bee_ast_node_free(node);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_parse_primary),
             cmocka_unit_test(test_parse_unary),
             cmocka_unit_test(test_parse_mul),
             cmocka_unit_test(test_parse_add),
+            cmocka_unit_test(test_parse_shift),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
