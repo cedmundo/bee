@@ -166,10 +166,31 @@ void bee_ast_node_free(struct bee_ast_node *node) {
 }
 
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error) {
-    return bee_parse_log_and(rest, error);
+    return bee_parse_log_or(rest, error);
 }
 
-// struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error) {}
+// log_or = log_and ('or' log_and)*
+struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error) {
+    struct bee_ast_node *node = bee_parse_log_and(rest, error);
+    if (error->type != BEE_PARSER_ERROR_NONE) {
+        return node;
+    }
+
+    for (;;) {
+        if (match_keyword(*rest, BEE_KEYWORD_OR)) {
+            struct bee_token token = consume(rest);
+            node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LOG_OR, node, bee_parse_log_and(rest, error));
+            if (error->type != BEE_PARSER_ERROR_NONE) {
+                return node;
+            }
+            continue;
+        }
+
+        break;
+    }
+
+    return node;
+}
 
 // log_and = log_not ('and' log_not)*
 struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error) {
