@@ -118,9 +118,7 @@ struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_er
 // log_and = log_and ('or' log_and | '||' log_and)*
 // struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error);
 
-// log_and = log_not ('and' log_not | '&&' log_not)*
-// struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error);
-
+struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error);

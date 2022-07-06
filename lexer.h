@@ -28,6 +28,8 @@ enum bee_token_error {
 
 enum bee_keyword_type {
     BEE_KEYWORD_NONE,
+    BEE_KEYWORD_AND,
+    BEE_KEYWORD_OR,
     BEE_KEYWORD_NOT,
     BEE_KEYWORD_IS,
     BEE_KEYWORD_IN,

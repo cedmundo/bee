@@ -33,11 +33,13 @@ static const char *puncts_table[] = {
         [BEE_PUNCT_RPAR] = ")",
 };
 
-#define TRACKED_KEYWORD_TYPES 7
+#define TRACKED_KEYWORD_TYPES 9
 static_assert(BEE_KEYWORD_TYPES == TRACKED_KEYWORD_TYPES,
               "Exhaustive punct string table");
 static const char *keywords_table[] = {
         [BEE_KEYWORD_NONE] = NULL,
+        [BEE_KEYWORD_AND] = "and",
+        [BEE_KEYWORD_OR] = "or",
         [BEE_KEYWORD_NOT] = "not",
         [BEE_KEYWORD_IS] = "is",
         [BEE_KEYWORD_IN] = "in",
