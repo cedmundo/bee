@@ -605,60 +605,6 @@ static void test_parse_rel(void **state) {
     assert_int_equal(aux1->type, BEE_AST_NODE_ID);
     assert_string_equal("d", aux1->as_str);
     bee_ast_node_free(node);
-
-    start = bee_token_start("test", "a in b");
-    token = bee_token_next(start);
-    node = bee_parse_rel(&token, &error);
-    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
-    assert_non_null(node);
-    assert_int_equal(node->type, BEE_AST_NODE_BIN_IN);
-
-    aux0 = node->left;
-    assert_non_null(aux0);
-    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
-    assert_string_equal("a", aux0->as_str);
-
-    aux1 = node->right;
-    assert_non_null(aux1);
-    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
-    assert_string_equal("b", aux1->as_str);
-    bee_ast_node_free(node);
-
-    start = bee_token_start("test", "a not in b");
-    token = bee_token_next(start);
-    node = bee_parse_rel(&token, &error);
-    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
-    assert_non_null(node);
-    assert_int_equal(node->type, BEE_AST_NODE_BIN_NOT_IN);
-
-    aux0 = node->left;
-    assert_non_null(aux0);
-    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
-    assert_string_equal("a", aux0->as_str);
-
-    aux1 = node->right;
-    assert_non_null(aux1);
-    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
-    assert_string_equal("b", aux1->as_str);
-    bee_ast_node_free(node);
-
-    start = bee_token_start("test", "a is not b");
-    token = bee_token_next(start);
-    node = bee_parse_rel(&token, &error);
-    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
-    assert_non_null(node);
-    assert_int_equal(node->type, BEE_AST_NODE_BIN_IS_NOT);
-
-    aux0 = node->left;
-    assert_non_null(aux0);
-    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
-    assert_string_equal("a", aux0->as_str);
-
-    aux1 = node->right;
-    assert_non_null(aux1);
-    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
-    assert_string_equal("b", aux1->as_str);
-    bee_ast_node_free(node);
 }
 
 static void test_parse_log_not(void **state) {

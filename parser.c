@@ -226,8 +226,7 @@ struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_parser
 }
 
 // rel = bit_or ('==' bit_or | '!=' bit_or | '>' bit_or | '>=' bit_or
-//                  | '<' bit_or | '<=' bit_or | 'is' bit_or | 'is' 'not' bit_or
-//                  | 'in' bit_or | 'not' 'in' bit_or | 'matches' bit_or | 'not' 'matches' bit_or)*
+//                  | '<' bit_or | '<=' bit_or)*
 struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_error *error) {
     struct bee_ast_node *node = bee_parse_bit_or(rest, error);
     if (error->type != BEE_PARSER_ERROR_NONE) {
@@ -286,63 +285,6 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
             if (error->type != BEE_PARSER_ERROR_NONE) {
                 return node;
             }
-            continue;
-        }
-
-        if (match_keyword(*rest, BEE_KEYWORD_IS)) {
-            struct bee_token token = consume(rest);
-            if (match_keyword(*rest, BEE_KEYWORD_NOT)) {
-                token = consume(rest);
-                node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_IS_NOT, node, bee_parse_bit_or(rest, error));
-                if (error->type != BEE_PARSER_ERROR_NONE) {
-                    return node;
-                }
-            } else {
-                node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_IS, node, bee_parse_bit_or(rest, error));
-                if (error->type != BEE_PARSER_ERROR_NONE) {
-                    return node;
-                }
-            }
-
-            continue;
-        }
-
-        if (match_keyword(*rest, BEE_KEYWORD_NOT)) {
-            if (match_keyword(bee_token_next(*rest), BEE_KEYWORD_IN)) {
-                consume(rest);
-                struct bee_token token = consume(rest);
-                node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_NOT_IN, node, bee_parse_bit_or(rest, error));
-                if (error->type != BEE_PARSER_ERROR_NONE) {
-                    return node;
-                }
-            }
-        }
-
-        if (match_keyword(*rest, BEE_KEYWORD_IN)) {
-            struct bee_token token = consume(rest);
-            node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_IN, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
-                return node;
-            }
-
-            continue;
-        }
-
-        if (match_keyword(*rest, BEE_KEYWORD_MATCHES)) {
-            struct bee_token token = consume(rest);
-            if (match_keyword(*rest, BEE_KEYWORD_NOT)) {
-                token = consume(rest);
-                node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_NOT_MATCHES, node, bee_parse_bit_or(rest, error));
-                if (error->type != BEE_PARSER_ERROR_NONE) {
-                    return node;
-                }
-            } else {
-                node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_MATCHES, node, bee_parse_bit_or(rest, error));
-                if (error->type != BEE_PARSER_ERROR_NONE) {
-                    return node;
-                }
-            }
-
             continue;
         }
 

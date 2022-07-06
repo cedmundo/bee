@@ -171,20 +171,20 @@ static void test_tokenize_keyword(void **state) {
     (void) state;
     struct bee_token token;
 
-    token = bee_token_start("test_tokenize", "is");
+    token = bee_token_start("test_tokenize", "not");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_equal(token.type, BEE_TOKEN_TYPE_KEYWORD);
-    assert_int_equal(token.len, 2);
-    assert_memory_equal(token.data + token.off, "is", token.len);
-    assert_int_equal(token.keyword_type, BEE_KEYWORD_IS);
+    assert_int_equal(token.len, 3);
+    assert_memory_equal(token.data + token.off, "not", token.len);
+    assert_int_equal(token.keyword_type, BEE_KEYWORD_NOT);
 
-    token = bee_token_start("test_tokenize", "nis");
+    token = bee_token_start("test_tokenize", "note");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_not_equal(token.type, BEE_TOKEN_TYPE_KEYWORD);
 
-    token = bee_token_start("test_tokenize", "isn");
+    token = bee_token_start("test_tokenize", "snot");
     token = bee_token_next(token);
     assert_int_equal(token.error, BEE_TOKEN_ERROR_NONE);
     assert_int_not_equal(token.type, BEE_TOKEN_TYPE_KEYWORD);
