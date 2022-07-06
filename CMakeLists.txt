@@ -33,6 +33,8 @@ enable_testing()
 setup_test_target(lexer_test lexer.h lexer.c)
 add_test(NAME lexer_test COMMAND lexer_test)
 
-enable_testing()
 setup_test_target(parser_test lexer.h lexer.c parser.h parser.c)
 add_test(NAME parser_test COMMAND parser_test)
+
+setup_test_target(compiler_test lexer.h lexer.c parser.h parser.c compiler.h compiler.c)
+add_test(NAME compiler_test COMMAND compiler_test)

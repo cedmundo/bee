@@ -33,8 +33,6 @@ enum bee_ast_node_type {
     BEE_AST_NODE_UNA_BIT_NEG,
     BEE_AST_NODE_UNA_ARI_NEG,
     BEE_AST_NODE_UNA_ARI_POS,
-    BEE_AST_NODE_UNA_REF,
-    BEE_AST_NODE_UNA_DEREF,
     BEE_AST_NODE_BIN_ADD,
     BEE_AST_NODE_BIN_SUB,
     BEE_AST_NODE_BIN_MUL,
@@ -53,31 +51,13 @@ enum bee_ast_node_type {
     BEE_AST_NODE_BIN_BIT_XOR,
     BEE_AST_NODE_BIN_LOG_AND,
     BEE_AST_NODE_BIN_LOG_OR,
-    BEE_AST_NODE_BIN_AS,
-    BEE_AST_NODE_BIN_IS,
-    BEE_AST_NODE_BIN_IS_NOT,
-    BEE_AST_NODE_BIN_IN,
-    BEE_AST_NODE_BIN_NOT_IN,
-    BEE_AST_NODE_BIN_MATCHES,
-    BEE_AST_NODE_BIN_NOT_MATCHES,
-    BEE_AST_NODE_BIN_INP_ADD,
-    BEE_AST_NODE_BIN_INP_SUB,
-    BEE_AST_NODE_BIN_INP_MUL,
-    BEE_AST_NODE_BIN_INP_DIV,
-    BEE_AST_NODE_BIN_INP_BIT_AND,
-    BEE_AST_NODE_BIN_INP_BIT_OR,
-    BEE_AST_NODE_BIN_INP_LOG_AND,
-    BEE_AST_NODE_BIN_INP_LOG_OR,
-    BEE_AST_NODE_BIN_INP_LSH,
-    BEE_AST_NODE_BIN_INP_RSH,
-    BEE_AST_NODE_BIN_ACCESS,
-    BEE_AST_NODE_BIN_RANGE,
-    BEE_AST_NODE_BIN_COMMA,
 };
 
 struct bee_parser_error {
     char msg[500];
-    struct bee_token token;
+    const char *filename;
+    size_t row;
+    size_t col;
     enum bee_parser_error_type type;
 };
 
@@ -112,7 +92,6 @@ struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee
 
 void bee_ast_node_free(struct bee_ast_node *node);
 
-// expr = log_and
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error);
@@ -126,5 +105,4 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
 struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser_error *error);
-
 #endif //BEE_PARSER_H

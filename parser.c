@@ -60,7 +60,7 @@ struct bee_ast_node *bee_ast_node_new() {
 
 struct bee_ast_node *bee_ast_node_new_unary(struct bee_token at_token,
                                             enum bee_ast_node_type type, struct bee_ast_node *left) {
-    assert(type >= BEE_AST_NODE_UNA_LOG_NEG && type <= BEE_AST_NODE_UNA_DEREF);
+    assert(type >= BEE_AST_NODE_UNA_LOG_NEG && type <= BEE_AST_NODE_UNA_ARI_POS);
     struct bee_ast_node *node = bee_ast_node_new();
     node->type = type;
     node->filename = at_token.name;
@@ -72,7 +72,7 @@ struct bee_ast_node *bee_ast_node_new_unary(struct bee_token at_token,
 
 struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee_ast_node_type type,
                                              struct bee_ast_node *left, struct bee_ast_node *right) {
-    assert(type >= BEE_AST_NODE_BIN_ADD && type <= BEE_AST_NODE_BIN_COMMA);
+    assert(type >= BEE_AST_NODE_BIN_ADD && type <= BEE_AST_NODE_BIN_LOG_OR);
     struct bee_ast_node *node = bee_ast_node_new();
     node->type = type;
     node->filename = at_token.name;
@@ -91,12 +91,10 @@ void bee_ast_node_free(struct bee_ast_node *node) {
                 jit_free(node->as_str);
             }
             break;
-        case BEE_AST_NODE_UNA_DEREF:
         case BEE_AST_NODE_UNA_BIT_NEG:
         case BEE_AST_NODE_UNA_ARI_POS:
         case BEE_AST_NODE_UNA_ARI_NEG:
         case BEE_AST_NODE_UNA_LOG_NEG:
-        case BEE_AST_NODE_UNA_REF:
             if (node->left != NULL) {
                 bee_ast_node_free(node->left);
             }
@@ -119,26 +117,6 @@ void bee_ast_node_free(struct bee_ast_node *node) {
         case BEE_AST_NODE_BIN_BIT_XOR:
         case BEE_AST_NODE_BIN_LOG_AND:
         case BEE_AST_NODE_BIN_LOG_OR:
-        case BEE_AST_NODE_BIN_AS:
-        case BEE_AST_NODE_BIN_IS:
-        case BEE_AST_NODE_BIN_IS_NOT:
-        case BEE_AST_NODE_BIN_IN:
-        case BEE_AST_NODE_BIN_NOT_IN:
-        case BEE_AST_NODE_BIN_MATCHES:
-        case BEE_AST_NODE_BIN_NOT_MATCHES:
-        case BEE_AST_NODE_BIN_INP_ADD:
-        case BEE_AST_NODE_BIN_INP_SUB:
-        case BEE_AST_NODE_BIN_INP_MUL:
-        case BEE_AST_NODE_BIN_INP_DIV:
-        case BEE_AST_NODE_BIN_INP_BIT_AND:
-        case BEE_AST_NODE_BIN_INP_BIT_OR:
-        case BEE_AST_NODE_BIN_INP_LOG_AND:
-        case BEE_AST_NODE_BIN_INP_LOG_OR:
-        case BEE_AST_NODE_BIN_INP_LSH:
-        case BEE_AST_NODE_BIN_INP_RSH:
-        case BEE_AST_NODE_BIN_ACCESS:
-        case BEE_AST_NODE_BIN_RANGE:
-        case BEE_AST_NODE_BIN_COMMA:
             if (node->left != NULL) {
                 bee_ast_node_free(node->left);
             }
@@ -468,7 +446,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
     return node;
 }
 
-// unary = primary | ('+' | '-' | '*' | '&' | '~') unary
+// unary = primary | ('+' | '-' | '~') unary
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error) {
     if (match_punct(*rest, BEE_PUNCT_PLUS)) {
         struct bee_token token = consume(rest);
@@ -478,16 +456,6 @@ struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_e
     if (match_punct(*rest, BEE_PUNCT_MINUS)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_ARI_NEG, bee_parse_unary(rest, error));
-    }
-
-    if (match_punct(*rest, BEE_PUNCT_ASTERISK)) {
-        struct bee_token token = consume(rest);
-        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_DEREF, bee_parse_unary(rest, error));
-    }
-
-    if (match_punct(*rest, BEE_PUNCT_AMPERSAND)) {
-        struct bee_token token = consume(rest);
-        return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_REF, bee_parse_unary(rest, error));
     }
 
     if (match_punct(*rest, BEE_PUNCT_TILDE)) {
@@ -504,7 +472,9 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
         struct bee_ast_node *node = bee_parse_expr(rest, error);
         if (!match_punct_and_consume(rest, BEE_PUNCT_RPAR)) {
             error->type = BEE_PARSER_ERROR_UNEXPECTED_TOKEN;
-            error->token = *rest;
+            error->filename = rest->name;
+            error->row = rest->row;
+            error->col = rest->col;
             jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `)`", rest->len, rest->data + rest->off);
             return NULL;
         }
@@ -596,7 +566,9 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
     }
 
     error->type = BEE_PARSER_ERROR_UNEXPECTED_TOKEN;
-    error->token = *rest;
+    error->filename = rest->name;
+    error->row = rest->row;
+    error->col = rest->col;
     jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `(`<expr>`)`, <id>, <num>, <str> or <bol>",
                 rest->len, rest->data + rest->off);
     return NULL;

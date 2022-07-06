@@ -54,7 +54,7 @@ static void test_parse_primary(void **state) {
 static void test_parse_unary(void **state) {
     (void) state;
 
-    struct bee_token start = bee_token_start("test", "+id -id *id &id ~id +-id");
+    struct bee_token start = bee_token_start("test", "+id -id ~id +-id");
     struct bee_token token = bee_token_next(start);
     struct bee_parser_error error = {0LL};
     struct bee_ast_node *node, *aux;
@@ -74,28 +74,6 @@ static void test_parse_unary(void **state) {
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
     assert_int_equal(node->type, BEE_AST_NODE_UNA_ARI_NEG);
-
-    aux = node->left;
-    assert_non_null(aux);
-    assert_int_equal(aux->type, BEE_AST_NODE_ID);
-    assert_string_equal("id", aux->as_str);
-    bee_ast_node_free(node);
-
-    node = bee_parse_unary(&token, &error);
-    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
-    assert_non_null(node);
-    assert_int_equal(node->type, BEE_AST_NODE_UNA_DEREF);
-
-    aux = node->left;
-    assert_non_null(aux);
-    assert_int_equal(aux->type, BEE_AST_NODE_ID);
-    assert_string_equal("id", aux->as_str);
-    bee_ast_node_free(node);
-
-    node = bee_parse_unary(&token, &error);
-    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
-    assert_non_null(node);
-    assert_int_equal(node->type, BEE_AST_NODE_UNA_REF);
 
     aux = node->left;
     assert_non_null(aux);
@@ -190,7 +168,7 @@ static void test_parse_mul(void **state) {
     assert_string_equal("a", aux1->as_str);
     bee_ast_node_free(node);
 
-    start = bee_token_start("test", "a * *b");
+    start = bee_token_start("test", "a * +b");
     token = bee_token_next(start);
     node = bee_parse_mul(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
@@ -204,7 +182,7 @@ static void test_parse_mul(void **state) {
 
     aux1 = node->right;
     assert_non_null(aux1);
-    assert_int_equal(aux1->type, BEE_AST_NODE_UNA_DEREF);
+    assert_int_equal(aux1->type, BEE_AST_NODE_UNA_ARI_POS);
 
     aux0 = aux1->left;
     assert_int_equal(aux0->type, BEE_AST_NODE_ID);
