@@ -116,19 +116,15 @@ void bee_ast_node_free(struct bee_ast_node *node);
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error);
 
 // log_and = log_and ('or' log_and | '||' log_and)*
-// struct bee_ast_node *bee_parse_bit_log_or(struct bee_token *rest, struct bee_parser_error *error);
+// struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error);
 
 // log_and = log_not ('and' log_not | '&&' log_not)*
-// struct bee_ast_node *bee_parse_bit_log_and(struct bee_token *rest, struct bee_parser_error *error);
+// struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error);
 
 // log_not = rel | ('not' log_not | '!' log_not)*
-// struct bee_ast_node *bee_parse_bit_log_not(struct bee_token *rest, struct bee_parser_error *error);
+// struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_parser_error *error);
 
-// rel = bit_or ('==' bit_or | '!=' bit_or | '>' bit_or | '>=' bit_or
-//                  | '<' bit_or | '<=' bit_or | 'is' bit_or | 'is' 'not' bit_or
-//                  | 'in' bit_or | 'not' 'in' bit_or | 'matches' bit_or | 'not' 'matches' bit_or)*
-// struct bee_ast_node *bee_parse_bit_rel(struct bee_token *rest, struct bee_parser_error *error);
-
+struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser_error *error);
