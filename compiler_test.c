@@ -61,9 +61,78 @@ static void test_compile_int_constants(void **state) {
     assert_int_equal(result, 1);
 }
 
+static void test_compile_binary_exprs(void **state) {
+    (void) state;
+
+    jit_int result = 0;
+    assert_true(eval_int_expr("1 + 2", &result));
+    assert_int_equal(result, 3);
+
+    assert_true(eval_int_expr("5 - 3", &result));
+    assert_int_equal(result, 2);
+
+    assert_true(eval_int_expr("1 + -1", &result));
+    assert_int_equal(result, 0);
+
+    assert_true(eval_int_expr("true and true", &result));
+    assert_int_equal(result, 1);
+
+    assert_true(eval_int_expr("true and false", &result));
+    assert_int_equal(result, 0);
+
+    assert_true(eval_int_expr("false and true", &result));
+    assert_int_equal(result, 0);
+
+    assert_true(eval_int_expr("false and false", &result));
+    assert_int_equal(result, 0);
+
+    assert_true(eval_int_expr("true or true", &result));
+    assert_int_equal(result, 1);
+
+    assert_true(eval_int_expr("true or false", &result));
+    assert_int_equal(result, 1);
+
+    assert_true(eval_int_expr("false or true", &result));
+    assert_int_equal(result, 1);
+
+    assert_true(eval_int_expr("false or false", &result));
+    assert_int_equal(result, 0);
+
+    assert_true(eval_int_expr("0xBA & 0xAB", &result));
+    assert_int_equal((uint8_t)result, 0xAA);
+
+    assert_true(eval_int_expr("0xBA | 0xAB", &result));
+    assert_int_equal((uint8_t)result, 0xBB);
+}
+
+static void test_compile_unary_exprs(void **state) {
+    (void) state;
+
+    jit_int result = 0;
+    assert_true(eval_int_expr("not false", &result));
+    assert_int_equal(result, 1);
+
+    assert_true(eval_int_expr("not true", &result));
+    assert_int_equal(result, 0);
+
+    assert_true(eval_int_expr("-(1)", &result));
+    assert_int_equal(result, -1);
+
+    assert_true(eval_int_expr("+(-1)", &result));
+    assert_int_equal(result, -1);
+
+    assert_true(eval_int_expr("-(-1)", &result));
+    assert_int_equal(result, 1);
+
+    assert_true(eval_int_expr("~0xAB", &result));
+    assert_int_equal((uint8_t)result, 0x54);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_compile_int_constants),
+            cmocka_unit_test(test_compile_binary_exprs),
+            cmocka_unit_test(test_compile_unary_exprs),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
