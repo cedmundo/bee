@@ -41,7 +41,8 @@ jit_value_t bee_compile_node(jit_function_t f, struct bee_ast_node *node, struct
             return jit_insn_mul(f, bee_compile_node(f, node->left, error, scope),
                                 jit_value_create_nint_constant(f, jit_type_int, -1));
         case BEE_AST_NODE_UNA_LOG_NEG:
-            return jit_insn_to_not_bool(f, jit_insn_to_bool(f, bee_compile_node(f, node->left, error, scope)));
+            return jit_insn_to_not_bool(f, jit_insn_to_bool(f,
+                                                            bee_compile_node(f, node->left, error, scope)));
         case BEE_AST_NODE_BIN_ADD:
             return jit_insn_add(f, bee_compile_node(f, node->left, error, scope),
                                 bee_compile_node(f, node->right, error, scope));
@@ -121,6 +122,26 @@ jit_value_t bee_compile_node(jit_function_t f, struct bee_ast_node *node, struct
 
             return value;
         }
+        case BEE_AST_NODE_LET_IN_EXPR: {
+            bee_scope_push(scope);
+            struct bee_ast_node *assign = node->left;
+            struct bee_ast_node *id = assign->left;
+            jit_value_t assign_value = bee_compile_node(f, assign->right, error, scope);
+            if (error->type != BEE_COMPILER_ERROR_NONE) {
+                return zero;
+            }
+
+            bee_scope_bind(scope, id->as_str, assign_value);
+
+            jit_value_t value = bee_compile_node(f, node->right, error, scope);
+            if (error->type != BEE_COMPILER_ERROR_NONE) {
+                return zero;
+            }
+
+            bee_scope_pop(scope);
+            return value;
+        }
+        case BEE_AST_NODE_BIN_DUCK_ASSIGN:
         case BEE_AST_NODE_LIT_STR:
         case BEE_AST_NODE_NONE:
             error->type = BEE_COMPILER_ERROR_UNSUPPORTED_NODE;

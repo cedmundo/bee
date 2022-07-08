@@ -136,7 +136,6 @@ static void test_compile_unary_exprs(void **state) {
     assert_int_equal((uint8_t)result, 0x54);
 }
 
-
 static void test_compile_id_expr(void **state) {
     (void) state;
 
@@ -150,12 +149,33 @@ static void test_compile_id_expr(void **state) {
     assert_false(eval_int_expr("undefined + 1", &result));
 }
 
+static void test_compile_let_in(void **state) {
+    (void) state;
+
+    jit_int result = 0;
+    assert_true(eval_int_expr("let x := 1 in x + 1", &result));
+    assert_int_equal(result, 2);
+
+    assert_true(eval_int_expr("let x := 2 in let xx := x * x in xx + 2 * x + 1", &result));
+    assert_int_equal(result, 9);
+
+    assert_true(eval_int_expr("let x := let y := 1 in y + 1 in x + 1", &result));
+    assert_int_equal(result, 3);
+
+    assert_false(eval_int_expr("let 1", &result));
+    assert_false(eval_int_expr("let x := 1", &result));
+    assert_false(eval_int_expr("let x := 1 in", &result));
+    assert_false(eval_int_expr("let x := in x", &result));
+    assert_false(eval_int_expr("let x := 1 in y", &result));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_compile_int_constants),
             cmocka_unit_test(test_compile_binary_exprs),
             cmocka_unit_test(test_compile_unary_exprs),
             cmocka_unit_test(test_compile_id_expr),
+            cmocka_unit_test(test_compile_let_in),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

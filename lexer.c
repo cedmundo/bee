@@ -7,7 +7,7 @@
 
 #include "lexer.h"
 
-#define TRACKED_PUNCT_TYPES 20
+#define TRACKED_PUNCT_TYPES 21
 static_assert(BEE_PUNCT_TYPES == TRACKED_PUNCT_TYPES,
               "Exhaustive punct string table");
 static const char *puncts_table[] = {
@@ -18,6 +18,7 @@ static const char *puncts_table[] = {
         [BEE_PUNCT_NE] = "!=",
         [BEE_PUNCT_GE] = ">=",
         [BEE_PUNCT_LE] = "<=",
+        [BEE_PUNCT_WALRUS] = ":=",
         [BEE_PUNCT_GT] = ">",
         [BEE_PUNCT_LT] = "<",
         [BEE_PUNCT_PLUS] = "+",
@@ -33,11 +34,13 @@ static const char *puncts_table[] = {
         [BEE_PUNCT_RPAR] = ")",
 };
 
-#define TRACKED_KEYWORD_TYPES 6
+#define TRACKED_KEYWORD_TYPES 8
 static_assert(BEE_KEYWORD_TYPES == TRACKED_KEYWORD_TYPES,
               "Exhaustive punct string table");
 static const char *keywords_table[] = {
         [BEE_KEYWORD_NONE] = NULL,
+        [BEE_KEYWORD_LET] = "let",
+        [BEE_KEYWORD_IN] = "in",
         [BEE_KEYWORD_AND] = "and",
         [BEE_KEYWORD_OR] = "or",
         [BEE_KEYWORD_NOT] = "not",

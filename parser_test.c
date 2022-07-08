@@ -711,6 +711,63 @@ static void test_parse_log_or(void **state) {
     bee_ast_node_free(node);
 }
 
+static void test_parse_let_in(void **state) {
+    (void) state;
+
+    struct bee_token start;
+    struct bee_token token;
+    struct bee_parser_error error = {0LL};
+    struct bee_ast_node *node, *aux0, *aux1, *aux2;
+
+    start = bee_token_start("test", "let x := 123 in x");
+    token = bee_token_next(start);
+    node = bee_parse_let_in(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_LET_IN_EXPR);
+
+    aux0 = node->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_BIN_DUCK_ASSIGN);
+
+    aux1 = aux0->left;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux1->as_str, "x");
+
+    aux2 = aux0->right;
+    assert_non_null(aux2);
+    assert_int_equal(aux2->type, BEE_AST_NODE_LIT_U32);
+    assert_int_equal(aux2->as_u32, 123);
+
+    aux1 = node->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux1->as_str, "x");
+    bee_ast_node_free(node);
+
+    error = (struct bee_parser_error){.type=BEE_PARSER_ERROR_NONE};
+    start = bee_token_start("test", "let x := 123");
+    token = bee_token_next(start);
+    node = bee_parse_let_in(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_WAS_EXPECTING_IN);
+    assert_null(node);
+
+    error = (struct bee_parser_error){.type=BEE_PARSER_ERROR_NONE};
+    start = bee_token_start("test", "let 123");
+    token = bee_token_next(start);
+    node = bee_parse_let_in(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_WAS_EXPECTING_ID);
+    assert_null(node);
+
+    error = (struct bee_parser_error){.type=BEE_PARSER_ERROR_NONE};
+    start = bee_token_start("test", "let id := 123 in");
+    token = bee_token_next(start);
+    node = bee_parse_let_in(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_UNEXPECTED_TOKEN);
+    assert_null(node);
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_parse_primary),
@@ -725,6 +782,7 @@ int main() {
             cmocka_unit_test(test_parse_log_not),
             cmocka_unit_test(test_parse_log_and),
             cmocka_unit_test(test_parse_log_or),
+            cmocka_unit_test(test_parse_let_in),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

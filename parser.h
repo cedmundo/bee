@@ -12,6 +12,9 @@
 enum bee_parser_error_type {
     BEE_PARSER_ERROR_NONE,
     BEE_PARSER_ERROR_UNEXPECTED_TOKEN,
+    BEE_PARSER_ERROR_WAS_EXPECTING_ID,
+    BEE_PARSER_ERROR_WAS_EXPECTING_IN,
+    BEE_PARSER_ERROR_WAS_EXPECTING_ASSIGN,
 };
 
 enum bee_ast_node_type {
@@ -51,6 +54,8 @@ enum bee_ast_node_type {
     BEE_AST_NODE_BIN_BIT_XOR,
     BEE_AST_NODE_BIN_LOG_AND,
     BEE_AST_NODE_BIN_LOG_OR,
+    BEE_AST_NODE_BIN_DUCK_ASSIGN,
+    BEE_AST_NODE_LET_IN_EXPR,
 };
 
 struct bee_parser_error {
@@ -93,6 +98,7 @@ struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee
 void bee_ast_node_free(struct bee_ast_node *node);
 
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error);
+struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_parser_error *error);
@@ -105,4 +111,5 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
 struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error);
 struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser_error *error);
+struct bee_ast_node *bee_must_parse_id(struct bee_token *rest, struct bee_parser_error *error);
 #endif //BEE_PARSER_H

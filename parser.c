@@ -72,7 +72,7 @@ struct bee_ast_node *bee_ast_node_new_unary(struct bee_token at_token,
 
 struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee_ast_node_type type,
                                              struct bee_ast_node *left, struct bee_ast_node *right) {
-    assert(type >= BEE_AST_NODE_BIN_ADD && type <= BEE_AST_NODE_BIN_LOG_OR);
+    assert(type >= BEE_AST_NODE_BIN_ADD && type <= BEE_AST_NODE_LET_IN_EXPR);
     struct bee_ast_node *node = bee_ast_node_new();
     node->type = type;
     node->filename = at_token.name;
@@ -117,6 +117,8 @@ void bee_ast_node_free(struct bee_ast_node *node) {
         case BEE_AST_NODE_BIN_BIT_XOR:
         case BEE_AST_NODE_BIN_LOG_AND:
         case BEE_AST_NODE_BIN_LOG_OR:
+        case BEE_AST_NODE_BIN_DUCK_ASSIGN:
+        case BEE_AST_NODE_LET_IN_EXPR:
             if (node->left != NULL) {
                 bee_ast_node_free(node->left);
             }
@@ -144,7 +146,84 @@ void bee_ast_node_free(struct bee_ast_node *node) {
 }
 
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error) {
-    return bee_parse_log_or(rest, error);
+    return bee_parse_let_in(rest, error);
+}
+
+// let_in = log_or | 'let' id ':=' expr 'in' expr
+struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_parser_error *error) {
+    if (match_keyword(*rest, BEE_KEYWORD_LET)) {
+        struct bee_token let_starting_at = consume(rest);
+        struct bee_ast_node *id_node = bee_must_parse_id(rest, error);
+        if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (id_node != NULL) {
+                bee_ast_node_free(id_node);
+            }
+            return NULL;
+        }
+
+        if (!match_punct(*rest, BEE_PUNCT_WALRUS)) {
+            if (id_node != NULL) {
+                bee_ast_node_free(id_node);
+            }
+            error->type = BEE_PARSER_ERROR_WAS_EXPECTING_ASSIGN;
+            error->filename = rest->name;
+            error->row = rest->row;
+            error->col = rest->col;
+            jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `:=`",
+                        rest->len, rest->data + rest->off);
+            return NULL;
+        }
+        struct bee_token walrus_starting_at = consume(rest);
+
+        struct bee_ast_node *value_expr_node = bee_parse_expr(rest, error);
+        if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (id_node != NULL) {
+                bee_ast_node_free(id_node);
+            }
+            if (value_expr_node != NULL) {
+                bee_ast_node_free(value_expr_node);
+            }
+            return NULL;
+        }
+
+        if (!match_keyword_and_consume(rest, BEE_KEYWORD_IN)) {
+            if (id_node != NULL) {
+                bee_ast_node_free(id_node);
+            }
+            if (value_expr_node != NULL) {
+                bee_ast_node_free(value_expr_node);
+            }
+            error->type = BEE_PARSER_ERROR_WAS_EXPECTING_IN;
+            error->filename = rest->name;
+            error->row = rest->row;
+            error->col = rest->col;
+            jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `in`",
+                        rest->len, rest->data + rest->off);
+            return NULL;
+        }
+
+        struct bee_ast_node *into_expr_node = bee_parse_expr(rest, error);
+        if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (id_node != NULL) {
+                bee_ast_node_free(id_node);
+            }
+            if (value_expr_node != NULL) {
+                bee_ast_node_free(value_expr_node);
+            }
+            if (into_expr_node != NULL) {
+                bee_ast_node_free(into_expr_node);
+            }
+            return NULL;
+        }
+
+        struct bee_ast_node *assign_node = bee_ast_node_new_binary(walrus_starting_at,
+                                                                   BEE_AST_NODE_BIN_DUCK_ASSIGN, id_node, value_expr_node);
+        struct bee_ast_node *let_in_node = bee_ast_node_new_binary(let_starting_at,
+                                                                   BEE_AST_NODE_LET_IN_EXPR, assign_node, into_expr_node);
+        return let_in_node;
+    }
+
+   return bee_parse_log_or(rest, error);
 }
 
 // log_or = log_and ('or' log_and)*
@@ -481,15 +560,7 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
 
         return node;
     } else if (match_type(*rest, BEE_TOKEN_TYPE_ID)) {
-        struct bee_token id_data = consume(rest);
-        struct bee_ast_node *node = bee_ast_node_new();
-        node->type = BEE_AST_NODE_ID;
-        node->filename = id_data.name;
-        node->row = id_data.row;
-        node->col = id_data.col;
-        node->as_str = jit_calloc(id_data.len + 1, sizeof(char));
-        jit_memcpy(node->as_str, id_data.data + id_data.off, id_data.len);
-        return node;
+       return bee_must_parse_id(rest, error);
     } else if (match_type(*rest, BEE_TOKEN_TYPE_BOOLEAN)) {
         struct bee_token bol_data = consume(rest);
         struct bee_ast_node *node = bee_ast_node_new();
@@ -572,4 +643,26 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
     jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `(`<expr>`)`, <id>, <num>, <str> or <bol>",
                 rest->len, rest->data + rest->off);
     return NULL;
+}
+
+struct bee_ast_node *bee_must_parse_id(struct bee_token *rest, struct bee_parser_error *error) {
+    if (!match_type(*rest, BEE_TOKEN_TYPE_ID)) {
+        error->type = BEE_PARSER_ERROR_WAS_EXPECTING_ID;
+        error->filename = rest->name;
+        error->row = rest->row;
+        error->col = rest->col;
+        jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: <id>",
+                    rest->len, rest->data + rest->off);
+        return NULL;
+    }
+
+    struct bee_token id_data = consume(rest);
+    struct bee_ast_node *node = bee_ast_node_new();
+    node->type = BEE_AST_NODE_ID;
+    node->filename = id_data.name;
+    node->row = id_data.row;
+    node->col = id_data.col;
+    node->as_str = jit_calloc(id_data.len + 1, sizeof(char));
+    jit_memcpy(node->as_str, id_data.data + id_data.off, id_data.len);
+    return node;
 }

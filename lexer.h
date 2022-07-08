@@ -28,6 +28,8 @@ enum bee_token_error {
 
 enum bee_keyword_type {
     BEE_KEYWORD_NONE,
+    BEE_KEYWORD_LET,
+    BEE_KEYWORD_IN,
     BEE_KEYWORD_AND,
     BEE_KEYWORD_OR,
     BEE_KEYWORD_NOT,
@@ -44,6 +46,7 @@ enum bee_punct_type {
     BEE_PUNCT_NE,       // !=
     BEE_PUNCT_GE,       // >=
     BEE_PUNCT_LE,       // <=
+    BEE_PUNCT_WALRUS,   // :=
     BEE_PUNCT_GT,       // >
     BEE_PUNCT_LT,       // <
     BEE_PUNCT_PLUS,     // +
