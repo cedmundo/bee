@@ -187,6 +187,7 @@ static void test_parse_mul(void **state) {
     aux0 = aux1->left;
     assert_int_equal(aux0->type, BEE_AST_NODE_ID);
     assert_string_equal("b", aux0->as_str);
+    bee_ast_node_free(node);
 
     start = bee_token_start("test", "a * (b / c)");
     token = bee_token_next(start);

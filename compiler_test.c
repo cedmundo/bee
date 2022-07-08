@@ -41,6 +41,7 @@ static bool eval_int_expr(const char *code, jit_int *result) {
 
     // Apply function
     jit_function_apply(function, NULL, result);
+    bee_ast_node_free(node);
     return true;
 }
 
