@@ -30,14 +30,14 @@ set(BEE_SOURCES)
 
 # Testing
 enable_testing()
+setup_test_target(scope_test scope.h scope.c)
+add_test(NAME scope_test COMMAND scope_test)
+
 setup_test_target(lexer_test lexer.h lexer.c)
 add_test(NAME lexer_test COMMAND lexer_test)
 
 setup_test_target(parser_test lexer.h lexer.c parser.h parser.c)
 add_test(NAME parser_test COMMAND parser_test)
 
-setup_test_target(compiler_test lexer.h lexer.c parser.h parser.c compiler.h compiler.c)
+setup_test_target(compiler_test lexer.h lexer.c parser.h parser.c scope.h scope.c compiler.h compiler.c)
 add_test(NAME compiler_test COMMAND compiler_test)
-
-setup_test_target(scope_test lexer.h lexer.c parser.h parser.c compiler.h compiler.c scope.h scope.c)
-add_test(NAME scope_test COMMAND scope_test)

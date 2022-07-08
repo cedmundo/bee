@@ -7,6 +7,7 @@
 #include <cmocka.h>
 #include <jit/jit.h>
 #include "parser.h"
+#include "scope.h"
 #include "compiler.h"
 
 static bool eval_int_expr(const char *code, jit_int *result) {
@@ -27,8 +28,13 @@ static bool eval_int_expr(const char *code, jit_int *result) {
         return false;
     }
 
+    struct bee_scope *scope = bee_scope_new();
+    bee_scope_bind(scope, "zero", jit_value_create_nint_constant(function, jit_type_int, 0));
+    bee_scope_bind(scope, "one", jit_value_create_nint_constant(function, jit_type_int, 1));
+    bee_scope_bind(scope, "two", jit_value_create_nint_constant(function, jit_type_int, 2));
+
     struct bee_compiler_error c_error = {.type = BEE_COMPILER_ERROR_NONE};
-    jit_value_t ret_value = bee_compile_node(function, node, &c_error);
+    jit_value_t ret_value = bee_compile_node(function, node, &c_error, scope);
     if (c_error.type != BEE_COMPILER_ERROR_NONE) {
         fprintf(stderr, "%s:%ld:%ld: compile error: %s", c_error.filename, c_error.row, c_error.col, c_error.msg);
         return false;
@@ -42,6 +48,7 @@ static bool eval_int_expr(const char *code, jit_int *result) {
     // Apply function
     jit_function_apply(function, NULL, result);
     bee_ast_node_free(node);
+    bee_scope_free(scope);
     return true;
 }
 
@@ -129,11 +136,26 @@ static void test_compile_unary_exprs(void **state) {
     assert_int_equal((uint8_t)result, 0x54);
 }
 
+
+static void test_compile_id_expr(void **state) {
+    (void) state;
+
+    jit_int result = 0;
+    assert_true(eval_int_expr("two * 3", &result));
+    assert_int_equal(result, 6);
+
+    assert_true(eval_int_expr("-one", &result));
+    assert_int_equal(result, -1);
+
+    assert_false(eval_int_expr("undefined + 1", &result));
+}
+
 int main() {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_compile_int_constants),
             cmocka_unit_test(test_compile_binary_exprs),
             cmocka_unit_test(test_compile_unary_exprs),
+            cmocka_unit_test(test_compile_id_expr),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);
