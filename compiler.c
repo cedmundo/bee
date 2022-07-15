@@ -415,6 +415,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
         case BEE_AST_NODE_LIT_STR:
         case BEE_AST_NODE_NONE:
         case BEE_AST_NODE_TYPES:
+        case BEE_AST_NODE_ARG:
             if (error == NULL) {
                 error = jit_calloc(1, sizeof(struct bee_compiler_error));
             }
