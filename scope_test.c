@@ -20,12 +20,12 @@ static void test_scope_bind_get(void **state) {
     jit_type_t s = jit_type_create_signature(jit_abi_cdecl, jit_type_void, NULL, 0, 0);
     jit_function_t f = jit_function_create(ctx, s);
     jit_value_t v = jit_value_create_nint_constant(f, jit_type_int, 0x1FA);
+    union bee_object o = {.as_value = v};
+    assert_true(bee_scope_bind(scope, "value", o));
 
-    assert_true(bee_scope_bind(scope, "value", v));
-
-    jit_value_t r;
+    union bee_object r;
     assert_true(bee_scope_get(scope, "value", &r));
-    assert_int_equal(jit_value_get_nint_constant(r), 0x1FA);
+    assert_int_equal(jit_value_get_nint_constant(r.as_value), 0x1FA);
 
     jit_type_free(s);
     jit_function_abandon(f);
@@ -51,9 +51,10 @@ static void test_scope_fails_on_redefine(void **state) {
     jit_type_t s = jit_type_create_signature(jit_abi_cdecl, jit_type_void, NULL, 0, 0);
     jit_function_t f = jit_function_create(ctx, s);
     jit_value_t v = jit_value_create_nint_constant(f, jit_type_int, 0x1FA);
+    union bee_object o = {.as_value = v};
 
-    assert_true(bee_scope_bind(scope, "value", v));
-    assert_false(bee_scope_bind(scope, "value", v));
+    assert_true(bee_scope_bind(scope, "value", o));
+    assert_false(bee_scope_bind(scope, "value", o));
 
     jit_type_free(s);
     jit_function_abandon(f);
@@ -72,18 +73,20 @@ static void test_scope_push_bind_and_pop(void **state) {
     jit_function_t f = jit_function_create(ctx, s);
     jit_value_t v0 = jit_value_create_nint_constant(f, jit_type_int, 0xA);
     jit_value_t v1 = jit_value_create_nint_constant(f, jit_type_int, 0xB);
+    union bee_object o0 = {.as_value = v0};
+    union bee_object o1 = {.as_value = v1};
 
-    assert_true(bee_scope_bind(scope, "value", v0));
+    assert_true(bee_scope_bind(scope, "value", o0));
     bee_scope_push(scope);
-    assert_true(bee_scope_bind(scope, "value", v1));
+    assert_true(bee_scope_bind(scope, "value", o1));
 
-    jit_value_t r;
+    union bee_object r;
     assert_true(bee_scope_get(scope, "value", &r));
-    assert_int_equal(jit_value_get_nint_constant(r), 0xB);
+    assert_int_equal(jit_value_get_nint_constant(r.as_value), 0xB);
 
     bee_scope_pop(scope);
     assert_true(bee_scope_get(scope, "value", &r));
-    assert_int_equal(jit_value_get_nint_constant(r), 0xA);
+    assert_int_equal(jit_value_get_nint_constant(r.as_value), 0xA);
 
     jit_type_free(s);
     jit_function_abandon(f);
