@@ -21,7 +21,7 @@ bool scope_expand(struct bee_scope *scope) {
             return false;
         }
 
-        scope->objs_array = jit_calloc(new_cap, sizeof(jit_value_t));
+        scope->objs_array = jit_calloc(new_cap, sizeof(union bee_object));
         if (scope->objs_array == NULL) {
             jit_free(scope->depths_array);
             jit_free(scope->ids_array);
@@ -39,7 +39,7 @@ bool scope_expand(struct bee_scope *scope) {
             return false;
         }
 
-        scope->objs_array = jit_realloc(scope->objs_array, new_cap * sizeof(jit_value_t));
+        scope->objs_array = jit_realloc(scope->objs_array, new_cap * sizeof(union bee_object));
         if (scope->objs_array == NULL) {
             jit_free(scope->depths_array);
             jit_free(scope->ids_array);

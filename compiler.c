@@ -7,11 +7,34 @@
 #include "compiler.h"
 #include "scope.h"
 
+static size_t get_arg_count(struct bee_ast_node *root) {
+    struct bee_ast_node *node = root;
+    size_t count = 0L;
+    while (node != NULL && node->type == BEE_AST_NODE_ARG) {
+        count++;
+        node = node->right;
+    }
+    return count;
+}
+
+static void flatten_args(jit_function_t f, struct bee_ast_node *root, struct bee_compiler_error *error, struct bee_scope *scope, jit_value_t *values) {
+    struct bee_ast_node *node = root;
+    size_t i = 0L;
+    while (node != NULL && node->type == BEE_AST_NODE_ARG) {
+        values[i++] = bee_compile_node(f, node->left, error, scope).as_value;
+        if (error != NULL && error->type != BEE_COMPILER_ERROR_NONE) {
+            return;
+        }
+
+        node = node->right;
+    }
+}
+
 union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, struct bee_compiler_error *error, struct bee_scope *scope) {
     jit_value_t zero = jit_value_create_nint_constant(f, jit_type_int, 0);
     union bee_object result = {.as_value = zero};
-    union bee_object aux0 = {.as_value = zero};
-    union bee_object aux1 = {.as_value = zero};
+    union bee_object aux0;
+    union bee_object aux1;
 
     switch (node->type) {
         case BEE_AST_NODE_LIT_BOL:
@@ -371,14 +394,23 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
-            // TODO: COMPILE ARGUMENTS AND USE TO CALL VALUES (node->right)
+            size_t arg_count = get_arg_count(node->right);
+            jit_value_t *arg_values = jit_calloc(arg_count, sizeof(jit_value_t));
+            // FIXME: Release this pointer with result object
+
+            flatten_args(f, node->right, error, scope, arg_values);
+            if (error != NULL && error->type != BEE_COMPILER_ERROR_NONE) {
+                return result;
+            }
+
             if (callee.as_func.is_native) {
                 result.as_value = jit_insn_call_native(f, callee.as_func.name, callee.as_func.native_addr,
-                                     callee.as_func.signature, NULL, 0, callee.as_func.flags);
+                                     callee.as_func.signature, arg_values, arg_count, callee.as_func.flags);
             } else {
                 result.as_value = jit_insn_call(f, callee.as_func.name, callee.as_func.jit_function,
-                              callee.as_func.signature, NULL, 0, callee.as_func.flags);
+                              callee.as_func.signature, arg_values, arg_count, callee.as_func.flags);
             }
+            break;
         }
         case BEE_AST_NODE_LIT_STR:
         case BEE_AST_NODE_NONE:
