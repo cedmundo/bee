@@ -21,8 +21,8 @@ bool scope_expand(struct bee_scope *scope) {
             return false;
         }
 
-        scope->values_array = jit_calloc(new_cap, sizeof(jit_value_t));
-        if (scope->values_array == NULL) {
+        scope->objs_array = jit_calloc(new_cap, sizeof(jit_value_t));
+        if (scope->objs_array == NULL) {
             jit_free(scope->depths_array);
             jit_free(scope->ids_array);
             return false;
@@ -39,8 +39,8 @@ bool scope_expand(struct bee_scope *scope) {
             return false;
         }
 
-        scope->values_array = jit_realloc(scope->values_array, new_cap * sizeof(jit_value_t));
-        if (scope->values_array == NULL) {
+        scope->objs_array = jit_realloc(scope->objs_array, new_cap * sizeof(jit_value_t));
+        if (scope->objs_array == NULL) {
             jit_free(scope->depths_array);
             jit_free(scope->ids_array);
             return false;
@@ -74,14 +74,14 @@ void bee_scope_free(struct bee_scope *scope) {
         jit_free(scope->ids_array);
     }
 
-    if (scope->values_array != NULL) {
-        jit_free(scope->values_array);
+    if (scope->objs_array != NULL) {
+        jit_free(scope->objs_array);
     }
 
     jit_free(scope);
 }
 
-bool bee_scope_bind(struct bee_scope *scope, char *id, jit_value_t value) {
+bool bee_scope_bind(struct bee_scope *scope, char *id, union bee_object value) {
     // check if there is a value already defined on the scope
     for (size_t i = scope->len; i > 0; i--) {
         if (scope->depths_array[i] < scope->depth) {
@@ -105,15 +105,15 @@ bool bee_scope_bind(struct bee_scope *scope, char *id, jit_value_t value) {
     size_t a = scope->len + 1;
     scope->ids_array[a] = id;
     scope->depths_array[a] = scope->depth;
-    scope->values_array[a] = value;
+    scope->objs_array[a] = value;
     scope->len = a;
     return true;
 }
 
-bool bee_scope_get(struct bee_scope *scope, char *id, jit_value_t *value) {
+bool bee_scope_get(struct bee_scope *scope, char *id, union bee_object *value) {
     for (size_t i = scope->len; i > 0; i--) {
         if (jit_strcmp(scope->ids_array[i], id) == 0) {
-            *value = scope->values_array[i];
+            *value = scope->objs_array[i];
             return true;
         }
     }

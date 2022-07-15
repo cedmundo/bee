@@ -22,6 +22,7 @@ struct bee_compiler_error {
     enum bee_compiler_error_type type;
 };
 
-jit_value_t bee_compile_node(jit_function_t f, struct bee_ast_node *node, struct bee_compiler_error *error, struct bee_scope *scope);
+union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node,
+                                  struct bee_compiler_error *error, struct bee_scope *scope);
 
 #endif //BEE_COMPILER_H

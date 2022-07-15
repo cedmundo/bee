@@ -60,6 +60,7 @@ enum bee_punct_type {
     BEE_PUNCT_TILDE,    // ~
     BEE_PUNCT_LPAR,     // (
     BEE_PUNCT_RPAR,     // )
+    BEE_PUNCT_COMMA,    // ,
     BEE_PUNCT_TYPES
 };
 

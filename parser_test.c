@@ -10,40 +10,47 @@
 static void test_parse_primary(void **state) {
     (void) state;
 
-    struct bee_token start = bee_token_start("test", "id 123 \"a string\" (2.2) (-1)");
+    struct bee_token start = bee_token_start("test", "id 123 \"a string\" (2.2) 1 (-1)");
     struct bee_token token = bee_token_next(start);
-    struct bee_parser_error error = {0LL};
+    struct bee_parser_error error = {.type = BEE_PARSER_ERROR_NONE};
     struct bee_ast_node *node;
 
-    node = bee_parse_primary(&token, &error);
+    node = bee_parse_call_or_lit(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
     assert_int_equal(node->type, BEE_AST_NODE_ID);
     assert_string_equal("id", node->as_str);
     bee_ast_node_free(node);
 
-    node = bee_parse_primary(&token, &error);
+    node = bee_parse_call_or_lit(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
     assert_int_equal(node->type, BEE_AST_NODE_LIT_U32);
     assert_int_equal(node->as_u32, 123);
     bee_ast_node_free(node);
 
-    node = bee_parse_primary(&token, &error);
+    node = bee_parse_call_or_lit(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
     assert_int_equal(node->type, BEE_AST_NODE_LIT_STR);
     assert_string_equal("\"a string\"", node->as_str);
     bee_ast_node_free(node);
 
-    node = bee_parse_primary(&token, &error);
+    node = bee_parse_call_or_lit(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
     assert_int_equal(node->type, BEE_AST_NODE_LIT_F32);
     assert_float_equal(2.2, node->as_f32, 0.001);
     bee_ast_node_free(node);
 
-    node = bee_parse_primary(&token, &error);
+    node = bee_parse_call_or_lit(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_LIT_U32);
+    assert_int_equal(node->as_i32, 1);
+    bee_ast_node_free(node);
+
+    node = bee_parse_call_or_lit(&token, &error);
     assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
     assert_non_null(node);
     assert_int_equal(node->type, BEE_AST_NODE_LIT_I32);
@@ -764,8 +771,131 @@ static void test_parse_let_in(void **state) {
     start = bee_token_start("test", "let id := 123 in");
     token = bee_token_next(start);
     node = bee_parse_let_in(&token, &error);
-    assert_int_equal(error.type, BEE_PARSER_ERROR_UNEXPECTED_TOKEN);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_WAS_EXPECTING_EXPR);
     assert_null(node);
+}
+
+static void test_parse_call(void **state) {
+    (void) state;
+
+    struct bee_token start;
+    struct bee_token token;
+    struct bee_parser_error error = {0LL};
+    struct bee_ast_node *node, *aux0, *aux1, *aux2;
+
+    start = bee_token_start("test", "a()");
+    token = bee_token_next(start);
+    node = bee_parse_call(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_CALL);
+
+    aux0 = node->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "a");
+
+    assert_null(node->right);
+    bee_ast_node_free(node);
+
+    start = bee_token_start("test", "f(x)");
+    token = bee_token_next(start);
+    node = bee_parse_call(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_CALL);
+
+    aux0 = node->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "f");
+
+    aux1 = node->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ARG);
+
+    aux0 = aux1->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "x");
+    assert_null(aux1->right);
+    bee_ast_node_free(node);
+
+    start = bee_token_start("test", "f(x, y)");
+    token = bee_token_next(start);
+    node = bee_parse_call(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_CALL);
+
+    aux0 = node->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "f");
+
+    aux1 = node->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ARG);
+
+    aux0 = aux1->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "x");
+
+    aux2 = aux1->right;
+    assert_non_null(aux2);
+    assert_int_equal(aux2->type, BEE_AST_NODE_ARG);
+
+    aux0 = aux2->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "y");
+
+    assert_null(aux2->right);
+    bee_ast_node_free(node);
+
+
+    start = bee_token_start("test", "f(x, y, z)");
+    token = bee_token_next(start);
+    node = bee_parse_call(&token, &error);
+    assert_int_equal(error.type, BEE_PARSER_ERROR_NONE);
+    assert_non_null(node);
+    assert_int_equal(node->type, BEE_AST_NODE_CALL);
+
+    aux0 = node->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "f");
+
+    aux1 = node->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ARG);
+
+    aux0 = aux1->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "x");
+
+    aux2 = aux1->right;
+    assert_non_null(aux2);
+    assert_int_equal(aux2->type, BEE_AST_NODE_ARG);
+
+    aux0 = aux2->left;
+    assert_non_null(aux0);
+    assert_int_equal(aux0->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux0->as_str, "y");
+
+    aux1 = aux2->right;
+    assert_non_null(aux1);
+    assert_int_equal(aux1->type, BEE_AST_NODE_ARG);
+
+    aux2 = aux1->left;
+    assert_non_null(aux2);
+    assert_int_equal(aux2->type, BEE_AST_NODE_ID);
+    assert_string_equal(aux2->as_str, "z");
+
+    assert_null(aux2->right);
+    bee_ast_node_free(node);
 }
 
 int main() {
@@ -783,6 +913,7 @@ int main() {
             cmocka_unit_test(test_parse_log_and),
             cmocka_unit_test(test_parse_log_or),
             cmocka_unit_test(test_parse_let_in),
+            cmocka_unit_test(test_parse_call),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

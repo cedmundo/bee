@@ -10,6 +10,10 @@
 #include "scope.h"
 #include "compiler.h"
 
+static int mul(int a, int b) {
+    return a * b;
+}
+
 static bool eval_int_expr(const char *code, jit_int *result) {
     jit_context_t context = jit_context_create();
 
@@ -24,24 +28,43 @@ static bool eval_int_expr(const char *code, jit_int *result) {
     struct bee_parser_error p_error = {.type = BEE_PARSER_ERROR_NONE};
     struct bee_ast_node *node = bee_parse_expr(&token, &p_error);
     if (p_error.type != BEE_PARSER_ERROR_NONE) {
-        fprintf(stderr, "%s:%ld:%ld: parse error: %s", token.name, token.row, token.col, p_error.msg);
+        fprintf(stderr, "%s:%ld:%ld: parse error: %s\n", token.name, token.row, token.col, p_error.msg);
         return false;
     }
 
+    // built-in values
     struct bee_scope *scope = bee_scope_new();
-    bee_scope_bind(scope, "zero", jit_value_create_nint_constant(function, jit_type_int, 0));
-    bee_scope_bind(scope, "one", jit_value_create_nint_constant(function, jit_type_int, 1));
-    bee_scope_bind(scope, "two", jit_value_create_nint_constant(function, jit_type_int, 2));
+    bee_scope_bind(scope, "zero", (union bee_object){
+        .as_value=jit_value_create_nint_constant(function, jit_type_int, 0)
+    });
+    bee_scope_bind(scope, "one", (union bee_object){
+        .as_value=jit_value_create_nint_constant(function, jit_type_int, 1)
+    });
+    bee_scope_bind(scope, "two", (union bee_object){
+        .as_value=jit_value_create_nint_constant(function, jit_type_int, 2)
+    });
+
+    // built-in functions
+    jit_type_t mul_params[] = {jit_type_int, jit_type_int};
+    jit_type_t mul_sign = jit_type_create_signature(jit_abi_cdecl, jit_type_int, mul_params, 2, true);
+    bee_scope_bind(scope, "mul", (union bee_object) {
+        .as_func = {
+            .signature = mul_sign,
+            .flags = JIT_CALL_NOTHROW,
+            .is_native = true,
+            .native_addr = mul,
+            .name = "mul",
+        }
+    });
 
     struct bee_compiler_error c_error = {.type = BEE_COMPILER_ERROR_NONE};
-    jit_value_t ret_value = bee_compile_node(function, node, &c_error, scope);
+    union bee_object ret_value = bee_compile_node(function, node, &c_error, scope);
     if (c_error.type != BEE_COMPILER_ERROR_NONE) {
-        fprintf(stderr, "%s:%ld:%ld: compile error: %s", c_error.filename, c_error.row, c_error.col, c_error.msg);
+        fprintf(stderr, "%s:%ld:%ld: compile error: %s\n", c_error.filename, c_error.row, c_error.col, c_error.msg);
         return false;
     }
 
-    jit_insn_return(function, ret_value);
-
+    jit_insn_return(function, ret_value.as_value);
     jit_function_compile(function);
     jit_context_build_end(context);
 
@@ -167,6 +190,11 @@ static void test_compile_let_in(void **state) {
     assert_false(eval_int_expr("let x := 1 in", &result));
     assert_false(eval_int_expr("let x := in x", &result));
     assert_false(eval_int_expr("let x := 1 in y", &result));
+}
+
+static void test_compile_call(void **state) {
+    (void) state;
+
 }
 
 int main() {
