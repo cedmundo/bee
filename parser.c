@@ -141,17 +141,17 @@ void bee_ast_node_free(struct bee_ast_node *node) {
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_error *error) {
     return bee_parse_let_in(rest, error);
 }
 
 // let_in = log_or | 'let' id ':=' expr 'in' expr
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_error *error) {
     if (match_keyword(*rest, BEE_KEYWORD_LET)) {
         struct bee_token let_starting_at = consume(rest);
         struct bee_ast_node *id_node = bee_must_parse_id(rest, error);
-        if (error->type != BEE_PARSER_ERROR_NONE) {
+        if (bee_has_error(error)) {
             if (id_node != NULL) {
                 bee_ast_node_free(id_node);
             }
@@ -162,18 +162,16 @@ struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_parser_
             if (id_node != NULL) {
                 bee_ast_node_free(id_node);
             }
-            error->type = BEE_PARSER_ERROR_WAS_EXPECTING_ASSIGN;
-            error->filename = rest->name;
-            error->row = rest->row;
-            error->col = rest->col;
-            jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `:=`",
-                        rest->len, rest->data + rest->off);
+
+            bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_ASSIGN, rest->name,
+                          rest->row, rest->col, "Unexpected token `%.*s`, was expecting: `:=`",
+                          rest->len, rest->data + rest->off);
             return NULL;
         }
         struct bee_token walrus_starting_at = consume(rest);
 
         struct bee_ast_node *value_expr_node = bee_parse_expr(rest, error);
-        if (error->type != BEE_PARSER_ERROR_NONE) {
+        if (bee_has_error(error)) {
             if (id_node != NULL) {
                 bee_ast_node_free(id_node);
             }
@@ -190,17 +188,13 @@ struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_parser_
             if (value_expr_node != NULL) {
                 bee_ast_node_free(value_expr_node);
             }
-            error->type = BEE_PARSER_ERROR_WAS_EXPECTING_IN;
-            error->filename = rest->name;
-            error->row = rest->row;
-            error->col = rest->col;
-            jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `in`",
-                        rest->len, rest->data + rest->off);
+            bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_IN, rest->name,
+                          rest->row, rest->col, "Unexpected token `%.*s`, was expecting: `in`");
             return NULL;
         }
 
         struct bee_ast_node *into_expr_node = bee_parse_expr(rest, error);
-        if (error->type != BEE_PARSER_ERROR_NONE) {
+        if (bee_has_error(error)) {
             if (id_node != NULL) {
                 bee_ast_node_free(id_node);
             }
@@ -225,9 +219,9 @@ struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_parser_
 
 // log_or = log_and ('or' log_and)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_log_and(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -235,7 +229,7 @@ struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_
         if (match_keyword(*rest, BEE_KEYWORD_OR)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LOG_OR, node, bee_parse_log_and(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -249,9 +243,9 @@ struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_parser_
 
 // log_and = log_not ('and' log_not)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_log_not(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -259,7 +253,7 @@ struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser
         if (match_keyword(*rest, BEE_KEYWORD_AND)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LOG_AND, node, bee_parse_log_not(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -273,7 +267,7 @@ struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_parser
 
 // log_not = rel | 'not' log_not
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_error *error) {
     if (match_keyword(*rest, BEE_KEYWORD_NOT)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_LOG_NEG, bee_parse_log_not(rest, error));
@@ -285,9 +279,9 @@ struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_parser
 // rel = bit_or ('==' bit_or | '!=' bit_or | '>' bit_or | '>=' bit_or
 //                  | '<' bit_or | '<=' bit_or)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_bit_or(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -295,7 +289,7 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_D_EQ)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_EQ, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -304,7 +298,7 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_NE)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_NE, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -313,7 +307,7 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_GT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_GT, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -322,7 +316,7 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_GE)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_GE, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -331,7 +325,7 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_LT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LT, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -340,7 +334,7 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_LE)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LE, node, bee_parse_bit_or(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -354,9 +348,9 @@ struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_parser_err
 
 // bit_or = bit_xor ('|' bit_xor)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_bit_xor(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -364,7 +358,7 @@ struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_
         if (match_punct(*rest, BEE_PUNCT_VBAR)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_OR, node, bee_parse_bit_xor(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -378,9 +372,9 @@ struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_parser_
 
 // bit_xor = bit_and ('^' bit_and)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_bit_and(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -388,7 +382,7 @@ struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser
         if (match_punct(*rest, BEE_PUNCT_CARET)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_XOR, node, bee_parse_bit_and(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -402,9 +396,9 @@ struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_parser
 
 // bit_and = shift ('&' shift)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_shift(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -412,7 +406,7 @@ struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser
         if (match_punct(*rest, BEE_PUNCT_AMPERSAND)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_BIT_AND, node, bee_parse_shift(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -426,9 +420,9 @@ struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_parser
 
 // shift = add ('>>' add | '<<' add)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_add(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -436,7 +430,7 @@ struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_e
         if (match_punct(*rest, BEE_PUNCT_D_LT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_LSH, node, bee_parse_add(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -445,7 +439,7 @@ struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_e
         if (match_punct(*rest, BEE_PUNCT_D_GT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_RSH, node, bee_parse_add(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -459,9 +453,9 @@ struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_parser_e
 
 // add = mul ('+' mul | '-' mul)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_mul(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -469,7 +463,7 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_PLUS)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_ADD, node, bee_parse_mul(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -478,7 +472,7 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_MINUS)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_SUB, node, bee_parse_mul(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -492,9 +486,9 @@ struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_parser_err
 
 // mul = unary ('*' unary | '/' unary | '%' unary)*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_unary(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return node;
     }
 
@@ -502,7 +496,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_ASTERISK)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_MUL, node, bee_parse_unary(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -511,7 +505,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_SLASH)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_DIV, node, bee_parse_unary(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -520,7 +514,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
         if (match_punct(*rest, BEE_PUNCT_PERCENT)) {
             struct bee_token token = consume(rest);
             node = bee_ast_node_new_binary(token, BEE_AST_NODE_BIN_REM, node, bee_parse_unary(rest, error));
-            if (error->type != BEE_PARSER_ERROR_NONE) {
+            if (bee_has_error(error)) {
                 return node;
             }
             continue;
@@ -534,7 +528,7 @@ struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_parser_err
 
 // unary = call_or_lit | ('+' | '-' | '~') unary
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_error *error) {
     if (match_punct(*rest, BEE_PUNCT_PLUS)) {
         struct bee_token token = consume(rest);
         return bee_ast_node_new_unary(token, BEE_AST_NODE_UNA_ARI_POS, bee_parse_unary(rest, error));
@@ -555,7 +549,7 @@ struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_parser_e
 
 // call_or_lit = lit | call
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_call_or_lit(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_call_or_lit(struct bee_token *rest, struct bee_error *error) {
     if (match_type(*rest, BEE_TOKEN_TYPE_NUMBER)) {
         struct bee_token num_data = consume(rest);
         struct bee_ast_node *node = bee_ast_node_new();
@@ -627,9 +621,9 @@ struct bee_ast_node *bee_parse_call_or_lit(struct bee_token *rest, struct bee_pa
 
 // call = primary ('(' args ')')*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_call(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_call(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = bee_parse_primary(rest, error);
-    if (error->type != BEE_PARSER_ERROR_NONE) {
+    if (bee_has_error(error)) {
         return NULL;
     }
 
@@ -645,11 +639,9 @@ struct bee_ast_node *bee_parse_call(struct bee_token *rest, struct bee_parser_er
             }
 
             if (!match_punct_and_consume(rest, BEE_PUNCT_RPAR)) {
-                error->type = BEE_PARSER_ERROR_WAS_EXPECTING_RPAR;
-                error->filename = rest->name;
-                error->row = rest->row;
-                error->col = rest->col;
-                jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `)`", rest->len, rest->data + rest->off);
+                bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_RPAR,
+                              rest->name, rest->row, rest->col,
+                                "Unexpected token `%.*s`, was expecting: `)`", rest->len, rest->data + rest->off);
                 return NULL;
             }
             continue;
@@ -667,7 +659,7 @@ struct bee_ast_node *bee_parse_call(struct bee_token *rest, struct bee_parser_er
 
 // args = (expr ',')*
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_args(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_args(struct bee_token *rest, struct bee_error *error) {
     struct bee_ast_node *node = NULL, *root = NULL;
 
     for(;;) {
@@ -676,11 +668,9 @@ struct bee_ast_node *bee_parse_args(struct bee_token *rest, struct bee_parser_er
         }
 
         if (root != NULL && !match_punct_and_consume(rest, BEE_PUNCT_COMMA)) {
-            error->type = BEE_PARSER_ERROR_WAS_EXPECTING_COMMA;
-            error->filename = rest->name;
-            error->row = rest->row;
-            error->col = rest->col;
-            jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `,`", rest->len, rest->data + rest->off);
+            bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_COMMA, rest->name,
+                          rest->row, rest->col, "Unexpected token `%.*s`, was expecting: `,`",
+                          rest->len, rest->data + rest->off);
             return NULL;
         }
 
@@ -698,15 +688,13 @@ struct bee_ast_node *bee_parse_args(struct bee_token *rest, struct bee_parser_er
 
 // primary = '(' expr ')' | id
 // NOLINTNEXTLINE(misc-no-recursion)
-struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_error *error) {
     if (match_punct_and_consume(rest, BEE_PUNCT_LPAR)) {
         struct bee_ast_node *node = bee_parse_expr(rest, error);
         if (!match_punct_and_consume(rest, BEE_PUNCT_RPAR)) {
-            error->type = BEE_PARSER_ERROR_WAS_EXPECTING_RPAR;
-            error->filename = rest->name;
-            error->row = rest->row;
-            error->col = rest->col;
-            jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: `)`", rest->len, rest->data + rest->off);
+            bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_RPAR,
+                          rest->name, rest->row, rest->col,
+                          "Unexpected token `%.*s`, was expecting: `)`", rest->len, rest->data + rest->off);
             return NULL;
         }
 
@@ -724,23 +712,15 @@ struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_parser
         return node;
     }
 
-    error->type = BEE_PARSER_ERROR_WAS_EXPECTING_EXPR;
-    error->filename = rest->name;
-    error->row = rest->row;
-    error->col = rest->col;
-    jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting an expression",
-                rest->len, rest->data + rest->off);
+    bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_EXPR, rest->name, rest->row, rest->col,
+                  "Unexpected token `%.*s`, was expecting an expression", rest->len, rest->data + rest->off);
     return NULL;
 }
 
-struct bee_ast_node *bee_must_parse_id(struct bee_token *rest, struct bee_parser_error *error) {
+struct bee_ast_node *bee_must_parse_id(struct bee_token *rest, struct bee_error *error) {
     if (!match_type(*rest, BEE_TOKEN_TYPE_ID)) {
-        error->type = BEE_PARSER_ERROR_WAS_EXPECTING_ID;
-        error->filename = rest->name;
-        error->row = rest->row;
-        error->col = rest->col;
-        jit_sprintf(error->msg, "Unexpected token `%.*s`, was expecting: <id>",
-                    rest->len, rest->data + rest->off);
+        bee_set_error(error, BEE_ERROR_PARSER_WAS_EXPECTING_ID, rest->name, rest->row, rest->col,
+                      "Unexpected token `%.*s`, was expecting: <id>", rest->len, rest->data + rest->off );
         return NULL;
     }
 

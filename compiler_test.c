@@ -25,11 +25,11 @@ static bool eval_int_expr(const char *code, jit_int *result, bool expects_fail) 
 
     struct bee_token start = bee_token_start("test", code);
     struct bee_token token = bee_token_next(start);
-    struct bee_parser_error p_error = {.type = BEE_PARSER_ERROR_NONE};
+    struct bee_error p_error = {.type = BEE_ERROR_NONE};
     struct bee_ast_node *node = bee_parse_expr(&token, &p_error);
-    if (p_error.type != BEE_PARSER_ERROR_NONE) {
+    if (p_error.type != BEE_ERROR_NONE) {
         if (!expects_fail) {
-            fprintf(stderr, "%s:%ld:%ld: parse error: %s\n", token.name, token.row, token.col, p_error.msg);
+            bee_print_error(&p_error);
         }
         return false;
     }
@@ -63,7 +63,7 @@ static bool eval_int_expr(const char *code, jit_int *result, bool expects_fail) 
     union bee_object ret_value = bee_compile_node(function, node, &c_error, scope);
     if (c_error.type != BEE_COMPILER_ERROR_NONE) {
         if (!expects_fail) {
-            fprintf(stderr, "%s:%ld:%ld: compile error: %s\n", c_error.filename, c_error.row, c_error.col, c_error.msg);
+            bee_print_error(&p_error);
         }
         return false;
     }
