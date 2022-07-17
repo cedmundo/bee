@@ -90,13 +90,26 @@ static bool is_punct(const char c) {
 }
 
 static size_t try_read_eol(const char *s) {
+    if (!is_eol(*s)) {
+        return 0;
+    }
+
     size_t i;
-    for (i = 0; i < jit_strlen(s); i++) {
-        if (!is_eol(*(s + i))) {
+    for (i = 1; i < jit_strlen(s); i++) {
+        if (!is_eol(*(s + i)) && !is_space(*(s + i))) {
             break;
         }
     }
+
     return i;
+}
+
+static size_t count_new_lines(const char *s, size_t l) {
+    size_t c = 0L;
+    for (size_t i = 0; i < l; i++) {
+        c += is_eol(*(s+i)) ? 1 : 0;
+    }
+    return c;
 }
 
 static size_t try_read_spaces(const char *s) {
@@ -126,13 +139,12 @@ static size_t try_read_id(const char *s) {
 }
 
 static size_t try_read_lit_num(const char *s, bool *is_float, enum bee_num_base *base,
-        enum bee_num_type *type, enum bee_token_error *error) {
+        enum bee_num_type *type, struct bee_error *error) {
     size_t i = 0;
     size_t sl = jit_strlen(s);
     *is_float = false;
     *base = BEE_NUM_BASE_DEC;
     *type = BEE_NUM_TYPE_U32;
-    *error = BEE_TOKEN_ERROR_NONE;
 
     if (*s == '-') {
         i += 1;
@@ -164,7 +176,8 @@ static size_t try_read_lit_num(const char *s, bool *is_float, enum bee_num_base 
 
     if (*(s + i) == '.') {
         if (*base != BEE_NUM_BASE_DEC) {
-            *error = BEE_TOKEN_ERROR_UNSUPPORTED_NUM_BASE;
+            bee_set_error_type(error, BEE_ERROR_LEXER_INVALID_BASE,
+                               "floating point numbers can only have base 10");
             return 0;
         }
 
@@ -202,7 +215,7 @@ static size_t try_read_lit_num(const char *s, bool *is_float, enum bee_num_base 
     return i;
 }
 
-static size_t try_read_lit_str(const char *s, enum bee_token_error *error) {
+static size_t try_read_lit_str(const char *s, struct bee_error *error) {
     size_t i;
     if (*s != '"') {
         return 0;
@@ -223,7 +236,7 @@ static size_t try_read_lit_str(const char *s, enum bee_token_error *error) {
     }
 
     if (*(s + i) != '"') {
-        *error = BEE_TOKEN_ERROR_UNTERMINATED_STRING;
+        bee_set_error_type(error, BEE_ERROR_LEXER_UNTERMINATED_STR, "unterminated string");
     }
 
     // include both '"' (starting and ending)
@@ -244,7 +257,7 @@ static size_t is_string_keyword(const char *s, const size_t len,
     return 0;
 }
 
-static size_t try_read_punct(const char *s, enum bee_punct_type *punct_type, enum bee_token_error *error) {
+static size_t try_read_punct(const char *s, enum bee_punct_type *punct_type, struct bee_error *error) {
     if (!is_punct(*s)) {
         *punct_type = 0;
         return 0;
@@ -265,11 +278,14 @@ static size_t try_read_punct(const char *s, enum bee_punct_type *punct_type, enu
     }
 
     *punct_type = 0;
-    *error = BEE_TOKEN_ERROR_UNKNOWN_PUNCT;
+    bee_set_error_type(error, BEE_ERROR_LEXER_UNKNOWN_PUNCT, "unterminated string");
     return 0;
 }
 
 struct bee_token bee_token_start(const char *name, const char *data) {
+    struct bee_error error;
+    bee_set_no_error(&error, name);
+
     return (struct bee_token) {
             .name = name,
             .data = data,
@@ -278,7 +294,7 @@ struct bee_token bee_token_start(const char *name, const char *data) {
             .row = 1L,
             .col = 0L,
             .type = BEE_TOKEN_TYPE_NONE,
-            .error = BEE_TOKEN_ERROR_NONE,
+            .error = error,
             .keyword_type = BEE_KEYWORD_NONE,
             .punct_type = BEE_PUNCT_NONE,
     };
@@ -290,12 +306,12 @@ struct bee_token bee_token_next(struct bee_token prev) {
             .data = prev.data,
             .off = prev.off + prev.len,
             .len = 0L,
-            .row = prev.row,
-            .col = prev.col + prev.len,
+            .row =  prev.type == BEE_TOKEN_TYPE_EOL ? prev.row + count_new_lines(prev.data + prev.off, prev.len) : prev.row,
+            .col = prev.type == BEE_TOKEN_TYPE_EOL ? 0 : prev.len + prev.col,
             .type = BEE_TOKEN_TYPE_EOF,
             .keyword_type = BEE_KEYWORD_NONE,
             .punct_type = BEE_PUNCT_NONE,
-            .error = BEE_TOKEN_ERROR_NONE,
+            .error = prev.error,
     };
 
     // Return end of file
@@ -313,17 +329,18 @@ struct bee_token bee_token_next(struct bee_token prev) {
     if (read_len > 0) {
         cur.type = BEE_TOKEN_TYPE_EOL;
         cur.len = read_len;
-        cur.row += read_len;
-        cur.col = 0L;
         return cur;
     }
+
+    cur.error.row = cur.row;
+    cur.error.col = cur.col;
 
     // Try read number
     bool is_float = false;
     enum bee_num_base base;
     enum bee_num_type type;
-    enum bee_token_error error;
-    read_len = try_read_lit_num(cur.data + cur.off, &is_float, &base, &type, &error);
+    read_len = try_read_lit_num(cur.data + cur.off,
+                                &is_float, &base, &type, &cur.error);
     if (read_len > 0) {
         cur.type = BEE_TOKEN_TYPE_NUMBER;
         cur.len = read_len;
@@ -367,6 +384,7 @@ struct bee_token bee_token_next(struct bee_token prev) {
     }
 
     cur.len = 1L;
-    cur.error = BEE_TOKEN_ERROR_UNKNOWN_CHAR;
+    bee_set_error_type(&cur.error, BEE_ERROR_LEXER_UNKNOWN_CHAR,
+                       "unknown char `%c`", *(cur.data + cur.off));
     return cur;
 }

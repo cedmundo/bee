@@ -5,6 +5,7 @@
 #ifndef BEE_LEXER_H
 #define BEE_LEXER_H
 #include <stddef.h>
+#include "berr.h"
 
 enum bee_token_type {
     BEE_TOKEN_TYPE_NONE,
@@ -16,14 +17,6 @@ enum bee_token_type {
     BEE_TOKEN_TYPE_BOOLEAN,
     BEE_TOKEN_TYPE_KEYWORD,
     BEE_TOKEN_TYPE_ID,
-};
-
-enum bee_token_error {
-    BEE_TOKEN_ERROR_NONE,
-    BEE_TOKEN_ERROR_UNKNOWN_CHAR,
-    BEE_TOKEN_ERROR_UNTERMINATED_STRING,
-    BEE_TOKEN_ERROR_UNKNOWN_PUNCT,
-    BEE_TOKEN_ERROR_UNSUPPORTED_NUM_BASE,
 };
 
 enum bee_keyword_type {
@@ -91,8 +84,8 @@ struct bee_token {
     size_t len;
     size_t row;
     size_t col;
+    struct bee_error error;
     enum bee_token_type type;
-    enum bee_token_error error;
     enum bee_keyword_type keyword_type;
     enum bee_punct_type punct_type;
     enum bee_num_base num_base;
