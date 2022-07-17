@@ -899,6 +899,10 @@ static void test_parse_call(void **state) {
 }
 
 int main() {
+    // NOTE: for unused imports
+    (void) (jmp_buf *) 0;
+    (void) (va_list *) 0;
+
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_parse_primary),
             cmocka_unit_test(test_parse_unary),

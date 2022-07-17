@@ -214,6 +214,10 @@ static void test_compile_call(void **state) {
 }
 
 int main() {
+    // NOTE: for unused imports
+    (void) (jmp_buf *) 0;
+    (void) (va_list *) 0;
+
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_compile_int_constants),
             cmocka_unit_test(test_compile_binary_exprs),

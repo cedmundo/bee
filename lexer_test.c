@@ -257,6 +257,10 @@ static void test_tokenize_bol(void **state) {
 }
 
 int main() {
+    // NOTE: for unused imports
+    (void) (jmp_buf *) 0;
+    (void) (va_list *) 0;
+
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_tokenize_num),
             cmocka_unit_test(test_tokenize_str),

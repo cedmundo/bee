@@ -95,6 +95,10 @@ static void test_scope_push_bind_and_pop(void **state) {
 }
 
 int main() {
+    // NOTE: for unused imports
+    (void) (jmp_buf *) 0;
+    (void) (va_list *) 0;
+
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(test_scope_bind_get),
             cmocka_unit_test(test_scope_fails_on_redefine),
