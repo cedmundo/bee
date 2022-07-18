@@ -5,7 +5,7 @@
 #ifndef BEE_LEXER_H
 #define BEE_LEXER_H
 #include <stddef.h>
-#include "berr.h"
+#include "errors.h"
 
 enum bee_token_type {
     BEE_TOKEN_TYPE_NONE,

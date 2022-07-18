@@ -7,7 +7,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "lexer.h"
-#include "berr.h"
+#include "errors.h"
 
 enum bee_ast_node_type {
     BEE_AST_NODE_NONE,

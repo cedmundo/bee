@@ -9,7 +9,7 @@ find_package(PkgConfig)
 pkg_check_modules(LIBJIT REQUIRED libjit)
 
 macro(setup_test_target TARGET TEST_SOURCES)
-    add_executable(${TARGET} berr.h berr.c ${ARGN} ${TARGET}.c)
+    add_executable(${TARGET} errors.h errors.c ${ARGN} ${TARGET}.c)
     target_compile_options(${TARGET} PUBLIC ${LIBJIT_CFLAGS_OTHER})
     target_compile_features(${TARGET} PRIVATE c_std_99)
     target_include_directories(${TARGET} PUBLIC ${LIBJIT_INCLUDE_DIRS})

@@ -2,7 +2,7 @@
 // Created by carlos on 7/17/22.
 //
 
-#include "berr.h"
+#include "errors.h"
 #include <stdarg.h>
 #include <stdio.h>
 #include <assert.h>

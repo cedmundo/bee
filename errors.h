@@ -2,8 +2,8 @@
 // Created by carlos on 7/17/22.
 //
 
-#ifndef BEE_BERR_H
-#define BEE_BERR_H
+#ifndef BEE_ERRORS_H
+#define BEE_ERRORS_H
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -38,4 +38,4 @@ void bee_set_error_type(struct bee_error *error, enum bee_error_type type, const
 bool bee_has_error(struct bee_error *error);
 void bee_print_error(struct bee_error *error);
 
-#endif //BEE_BERR_H
+#endif //BEE_ERRORS_H
