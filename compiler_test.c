@@ -36,31 +36,35 @@ static bool eval_int_expr(const char *code, jit_int *result, bool expects_fail) 
 
     // built-in values
     struct bee_scope *scope = bee_scope_new();
-    bee_scope_bind(scope, "zero", (union bee_object){
-        .as_value=jit_value_create_nint_constant(function, jit_type_int, 0)
+    bee_scope_bind(scope, "zero", (struct bee_slot) {
+            .type=BEE_SLOT_VALUE,
+            .as_value=jit_value_create_nint_constant(function, jit_type_int, 0)
     });
-    bee_scope_bind(scope, "one", (union bee_object){
-        .as_value=jit_value_create_nint_constant(function, jit_type_int, 1)
+    bee_scope_bind(scope, "one", (struct bee_slot) {
+            .type=BEE_SLOT_VALUE,
+            .as_value=jit_value_create_nint_constant(function, jit_type_int, 1)
     });
-    bee_scope_bind(scope, "two", (union bee_object){
-        .as_value=jit_value_create_nint_constant(function, jit_type_int, 2)
+    bee_scope_bind(scope, "two", (struct bee_slot) {
+            .type=BEE_SLOT_VALUE,
+            .as_value=jit_value_create_nint_constant(function, jit_type_int, 2)
     });
 
     // built-in functions
     jit_type_t mul_params[] = {jit_type_int, jit_type_int};
     jit_type_t mul_sign = jit_type_create_signature(jit_abi_cdecl, jit_type_int, mul_params, 2, true);
-    bee_scope_bind(scope, "mul", (union bee_object) {
-        .as_func = {
-            .signature = mul_sign,
-            .flags = JIT_CALL_NOTHROW,
-            .is_native = true,
-            .native_addr = mul,
-            .name = "mul",
-        }
+    bee_scope_bind(scope, "mul", (struct bee_slot) {
+            .type=BEE_SLOT_FUNC,
+            .as_func = {
+                    .signature = mul_sign,
+                    .flags = JIT_CALL_NOTHROW,
+                    .is_native = true,
+                    .native_addr = mul,
+                    .name = "mul",
+            }
     });
 
     struct bee_compiler_error c_error = {.type = BEE_COMPILER_ERROR_NONE};
-    union bee_object ret_value = bee_compile_node(function, node, &c_error, scope);
+    struct bee_slot ret_value = bee_compile_node(function, node, &c_error, scope);
     if (c_error.type != BEE_COMPILER_ERROR_NONE) {
         if (!expects_fail) {
             bee_print_error(&p_error);
@@ -134,10 +138,10 @@ static void test_compile_binary_exprs(void **state) {
     assert_int_equal(result, 0);
 
     assert_true(eval_int_expr("0xBA & 0xAB", &result, false));
-    assert_int_equal((uint8_t)result, 0xAA);
+    assert_int_equal((uint8_t) result, 0xAA);
 
     assert_true(eval_int_expr("0xBA | 0xAB", &result, false));
-    assert_int_equal((uint8_t)result, 0xBB);
+    assert_int_equal((uint8_t) result, 0xBB);
 }
 
 static void test_compile_unary_exprs(void **state) {
@@ -160,7 +164,7 @@ static void test_compile_unary_exprs(void **state) {
     assert_int_equal(result, 1);
 
     assert_true(eval_int_expr("~0xAB", &result, false));
-    assert_int_equal((uint8_t)result, 0x54);
+    assert_int_equal((uint8_t) result, 0x54);
 }
 
 static void test_compile_id_expr(void **state) {

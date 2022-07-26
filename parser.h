@@ -4,6 +4,7 @@
 
 #ifndef BEE_PARSER_H
 #define BEE_PARSER_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include "lexer.h"
@@ -79,27 +80,50 @@ struct bee_ast_node {
 };
 
 struct bee_ast_node *bee_ast_node_new();
-struct bee_ast_node *bee_ast_node_new_unary(struct bee_token at_token, enum bee_ast_node_type type, struct bee_ast_node *left);
-struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token, enum bee_ast_node_type type, struct bee_ast_node *left, struct bee_ast_node *right);
+
+struct bee_ast_node *
+bee_ast_node_new_unary(struct bee_token at_token, enum bee_ast_node_type type, struct bee_ast_node *left);
+
+struct bee_ast_node *
+bee_ast_node_new_binary(struct bee_token at_token, enum bee_ast_node_type type, struct bee_ast_node *left,
+                        struct bee_ast_node *right);
 
 void bee_ast_node_free(struct bee_ast_node *node);
 
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_let_in(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_log_or(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_log_and(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_log_not(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_rel(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_bit_or(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_bit_xor(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_bit_and(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_shift(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_add(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_mul(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_unary(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_call_or_lit(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_call(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_args(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_primary(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_must_parse_id(struct bee_token *rest, struct bee_error *error);
+
 #endif //BEE_PARSER_H

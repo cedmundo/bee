@@ -15,31 +15,31 @@ bool scope_expand(struct bee_scope *scope) {
             return false;
         }
 
-        scope->ids_array = jit_calloc(new_cap, sizeof(char*));
+        scope->ids_array = jit_calloc(new_cap, sizeof(char *));
         if (scope->ids_array == NULL) {
             jit_free(scope->depths_array);
             return false;
         }
 
-        scope->objs_array = jit_calloc(new_cap, sizeof(union bee_object));
+        scope->objs_array = jit_calloc(new_cap, sizeof(struct bee_slot));
         if (scope->objs_array == NULL) {
             jit_free(scope->depths_array);
             jit_free(scope->ids_array);
             return false;
         }
-    } else if (scope->len >= scope->cap-1) {
+    } else if (scope->len >= scope->cap - 1) {
         scope->depths_array = jit_realloc(scope->depths_array, new_cap * sizeof(size_t));
         if (scope->depths_array == NULL) {
             return false;
         }
 
-        scope->ids_array = jit_realloc(scope->ids_array, new_cap * sizeof(char*));
+        scope->ids_array = jit_realloc(scope->ids_array, new_cap * sizeof(char *));
         if (scope->ids_array == NULL) {
             jit_free(scope->depths_array);
             return false;
         }
 
-        scope->objs_array = jit_realloc(scope->objs_array, new_cap * sizeof(union bee_object));
+        scope->objs_array = jit_realloc(scope->objs_array, new_cap * sizeof(struct bee_slot));
         if (scope->objs_array == NULL) {
             jit_free(scope->depths_array);
             jit_free(scope->ids_array);
@@ -81,7 +81,7 @@ void bee_scope_free(struct bee_scope *scope) {
     jit_free(scope);
 }
 
-bool bee_scope_bind(struct bee_scope *scope, char *id, union bee_object value) {
+bool bee_scope_bind(struct bee_scope *scope, char *id, struct bee_slot value) {
     // check if there is a value already defined on the scope
     for (size_t i = scope->len; i > 0; i--) {
         if (scope->depths_array[i] < scope->depth) {
@@ -110,7 +110,7 @@ bool bee_scope_bind(struct bee_scope *scope, char *id, union bee_object value) {
     return true;
 }
 
-bool bee_scope_get(struct bee_scope *scope, char *id, union bee_object *value) {
+bool bee_scope_get(struct bee_scope *scope, char *id, struct bee_slot *value) {
     for (size_t i = scope->len; i > 0; i--) {
         if (jit_strcmp(scope->ids_array[i], id) == 0) {
             *value = scope->objs_array[i];

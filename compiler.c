@@ -18,7 +18,9 @@ static size_t get_arg_count(struct bee_ast_node *root) {
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-static void flatten_args(jit_function_t f, struct bee_ast_node *root, struct bee_compiler_error *error, struct bee_scope *scope, jit_value_t *values) {
+static void
+flatten_args(jit_function_t f, struct bee_ast_node *root, struct bee_compiler_error *error, struct bee_scope *scope,
+             jit_value_t *values) {
     struct bee_ast_node *node = root;
     size_t i = 0L;
     while (node != NULL && node->type == BEE_AST_NODE_ARG) {
@@ -32,44 +34,56 @@ static void flatten_args(jit_function_t f, struct bee_ast_node *root, struct bee
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, struct bee_compiler_error *error, struct bee_scope *scope) {
+struct bee_slot bee_compile_node(jit_function_t f, struct bee_ast_node *node, struct bee_compiler_error *error,
+                                 struct bee_scope *scope) {
     jit_value_t zero = jit_value_create_nint_constant(f, jit_type_int, 0);
-    union bee_object result = {.as_value = zero};
-    union bee_object aux0;
-    union bee_object aux1;
+    struct bee_slot result = {.as_value = zero, .type = BEE_SLOT_NONE};
+    struct bee_slot aux0;
+    struct bee_slot aux1;
 
     switch (node->type) {
         case BEE_AST_NODE_LIT_BOL:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_sys_bool, node->as_bol);
             break;
         case BEE_AST_NODE_LIT_U8:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_ubyte, node->as_u8);
             break;
         case BEE_AST_NODE_LIT_U16:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_ushort, node->as_u16);
             break;
         case BEE_AST_NODE_LIT_U32:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_uint, node->as_u32);
             break;
         case BEE_AST_NODE_LIT_U64:
-            result.as_value = jit_value_create_long_constant(f, jit_type_ulong, (int32_t)node->as_u64);
+            result.type = BEE_SLOT_VALUE;
+            result.as_value = jit_value_create_long_constant(f, jit_type_ulong, (int32_t) node->as_u64);
             break;
         case BEE_AST_NODE_LIT_I8:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_sbyte, node->as_i8);
             break;
         case BEE_AST_NODE_LIT_I16:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_short, node->as_i16);
             break;
         case BEE_AST_NODE_LIT_I32:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_nint_constant(f, jit_type_int, node->as_i32);
             break;
         case BEE_AST_NODE_LIT_I64:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_long_constant(f, jit_type_long, node->as_i64);
             break;
         case BEE_AST_NODE_LIT_F32:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_float32_constant(f, jit_type_float32, node->as_f32);
             break;
         case BEE_AST_NODE_LIT_F64:
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create_float64_constant(f, jit_type_float64, node->as_f64);
             break;
         case BEE_AST_NODE_UNA_BIT_NEG:
@@ -78,6 +92,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_not(f, aux0.as_value);
             break;
         case BEE_AST_NODE_UNA_ARI_POS:
@@ -86,6 +101,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_mul(f, aux0.as_value,
                                            jit_value_create_nint_constant(f, jit_type_int, +1));
             break;
@@ -95,6 +111,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_mul(f, aux0.as_value,
                                            jit_value_create_nint_constant(f, jit_type_int, -1));
             break;
@@ -104,6 +121,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_to_not_bool(f, jit_insn_to_bool(f, aux0.as_value));
             break;
         case BEE_AST_NODE_BIN_ADD:
@@ -117,7 +135,8 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
-            result.as_value = jit_insn_add(f, aux0.as_value,aux1.as_value);
+            result.type = BEE_SLOT_VALUE;
+            result.as_value = jit_insn_add(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_SUB:
             aux0 = bee_compile_node(f, node->left, error, scope);
@@ -130,7 +149,8 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
-            result.as_value = jit_insn_sub(f, aux0.as_value,aux1.as_value);
+            result.type = BEE_SLOT_VALUE;
+            result.as_value = jit_insn_sub(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_MUL:
             aux0 = bee_compile_node(f, node->left, error, scope);
@@ -143,6 +163,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_mul(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_DIV:
@@ -156,6 +177,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_div(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_REM:
@@ -169,6 +191,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_rem(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_EQ:
@@ -182,6 +205,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_eq(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_NE:
@@ -195,6 +219,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_ne(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_GT:
@@ -208,6 +233,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_gt(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_GE:
@@ -221,6 +247,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_ge(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_LT:
@@ -234,6 +261,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_lt(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_LE:
@@ -247,6 +275,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_le(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_LSH:
@@ -260,6 +289,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_shl(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_RSH:
@@ -273,6 +303,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_shr(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_BIT_AND:
@@ -286,6 +317,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_and(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_BIT_OR:
@@ -299,6 +331,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_or(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_BIT_XOR:
@@ -312,6 +345,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_insn_xor(f, aux0.as_value, aux1.as_value);
             break;
         case BEE_AST_NODE_BIN_LOG_AND: {
@@ -325,6 +359,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create(f, jit_type_sys_bool);
             jit_label_t false_label = jit_label_undefined;
             jit_insn_store(f, result.as_value, jit_value_create_nint_constant(f, jit_type_sys_bool, false));
@@ -344,6 +379,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
                 return result;
             }
 
+            result.type = BEE_SLOT_VALUE;
             result.as_value = jit_value_create(f, jit_type_sys_bool);
             jit_label_t true_label = jit_label_undefined;
             jit_insn_store(f, result.as_value, jit_value_create_nint_constant(f, jit_type_sys_bool, true));
@@ -381,7 +417,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
         }
         case BEE_AST_NODE_LET_IN_EXPR: {
             bee_scope_push(scope);
-            bee_compile_node(f, node->left, error, scope); // ignore result, it's already assigned
+            bee_compile_node(f, node->left, error, scope); // ignore result, it's already assigned on scope
             result = bee_compile_node(f, node->right, error, scope);
             if (error != NULL && error->type != BEE_COMPILER_ERROR_NONE) {
                 return result;
@@ -391,7 +427,7 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
             return result;
         }
         case BEE_AST_NODE_CALL: {
-            union bee_object callee = bee_compile_node(f, node->left, error, scope);
+            struct bee_slot callee = bee_compile_node(f, node->left, error, scope);
             if (error != NULL && error->type != BEE_COMPILER_ERROR_NONE) {
                 return result;
             }
@@ -407,10 +443,11 @@ union bee_object bee_compile_node(jit_function_t f, struct bee_ast_node *node, s
 
             if (callee.as_func.is_native) {
                 result.as_value = jit_insn_call_native(f, callee.as_func.name, callee.as_func.native_addr,
-                                     callee.as_func.signature, arg_values, arg_count, callee.as_func.flags);
+                                                       callee.as_func.signature, arg_values, arg_count,
+                                                       callee.as_func.flags);
             } else {
                 result.as_value = jit_insn_call(f, callee.as_func.name, callee.as_func.jit_function,
-                              callee.as_func.signature, arg_values, arg_count, callee.as_func.flags);
+                                                callee.as_func.signature, arg_values, arg_count, callee.as_func.flags);
             }
             break;
         }

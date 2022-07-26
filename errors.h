@@ -4,6 +4,7 @@
 
 #ifndef BEE_ERRORS_H
 #define BEE_ERRORS_H
+
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -31,11 +32,14 @@ struct bee_error {
 };
 
 void bee_set_no_error(struct bee_error *error, const char *filename);
+
 void bee_set_error(struct bee_error *error, enum bee_error_type type,
-        const char *filename, size_t row, size_t col, const char *fmt, ...);
+                   const char *filename, size_t row, size_t col, const char *fmt, ...);
+
 void bee_set_error_type(struct bee_error *error, enum bee_error_type type, const char *fmt, ...);
 
 bool bee_has_error(struct bee_error *error);
+
 void bee_print_error(struct bee_error *error);
 
 #endif //BEE_ERRORS_H

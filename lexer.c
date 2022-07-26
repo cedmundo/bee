@@ -107,7 +107,7 @@ static size_t try_read_eol(const char *s) {
 static size_t count_new_lines(const char *s, size_t l) {
     size_t c = 0L;
     for (size_t i = 0; i < l; i++) {
-        c += is_eol(*(s+i)) ? 1 : 0;
+        c += is_eol(*(s + i)) ? 1 : 0;
     }
     return c;
 }
@@ -129,8 +129,8 @@ static size_t try_read_id(const char *s) {
             return 0;
         }
 
-        if (!(is_alpha(*(s + i)) || is_digit(*(s + i), BEE_NUM_BASE_DEC) || *(s+i) == '_' ||
-              *(s+i) == '$')) {
+        if (!(is_alpha(*(s + i)) || is_digit(*(s + i), BEE_NUM_BASE_DEC) || *(s + i) == '_' ||
+              *(s + i) == '$')) {
             break;
         }
     }
@@ -139,7 +139,7 @@ static size_t try_read_id(const char *s) {
 }
 
 static size_t try_read_lit_num(const char *s, bool *is_float, enum bee_num_base *base,
-        enum bee_num_type *type, struct bee_error *error) {
+                               enum bee_num_type *type, struct bee_error *error) {
     size_t i = 0;
     size_t sl = jit_strlen(s);
     *is_float = false;
@@ -150,20 +150,20 @@ static size_t try_read_lit_num(const char *s, bool *is_float, enum bee_num_base 
         i += 1;
         *type = BEE_NUM_TYPE_I32;
 
-        bool follows_digit = is_digit(*(s+1), *base);
-        bool follows_dot_with_digit = *(s+1) == '.' && is_digit(*(s+2), *base);
+        bool follows_digit = is_digit(*(s + 1), *base);
+        bool follows_dot_with_digit = *(s + 1) == '.' && is_digit(*(s + 2), *base);
         if (!follows_digit && !follows_dot_with_digit) {
             return 0;
         }
     }
 
-    if (jit_strncmp("0x", s+i, 2) == 0) {
+    if (jit_strncmp("0x", s + i, 2) == 0) {
         i += 2;
         *base = BEE_NUM_BASE_HEX;
-    } else if (jit_strncmp("0b", s+i, 2) == 0) {
+    } else if (jit_strncmp("0b", s + i, 2) == 0) {
         i += 2;
         *base = BEE_NUM_BASE_BIN;
-    } else if (jit_strncmp("0o", s+i, 2) == 0) {
+    } else if (jit_strncmp("0o", s + i, 2) == 0) {
         i += 2;
         *base = BEE_NUM_BASE_OCT;
     }
@@ -193,20 +193,20 @@ static size_t try_read_lit_num(const char *s, bool *is_float, enum bee_num_base 
     }
 
     static char *suffixes[] = {
-        [BEE_NUM_TYPE_I8] =  "_i8",
-        [BEE_NUM_TYPE_I16] = "_i16",
-        [BEE_NUM_TYPE_I32] = "_i32",
-        [BEE_NUM_TYPE_I64] = "_i64",
-        [BEE_NUM_TYPE_U8] =  "_u8",
-        [BEE_NUM_TYPE_U16] = "_u16",
-        [BEE_NUM_TYPE_U32] = "_u32",
-        [BEE_NUM_TYPE_U64] = "_u64",
-        [BEE_NUM_TYPE_F32] = "_f32",
-        [BEE_NUM_TYPE_F64] = "_f64",
-        NULL,
+            [BEE_NUM_TYPE_I8] =  "_i8",
+            [BEE_NUM_TYPE_I16] = "_i16",
+            [BEE_NUM_TYPE_I32] = "_i32",
+            [BEE_NUM_TYPE_I64] = "_i64",
+            [BEE_NUM_TYPE_U8] =  "_u8",
+            [BEE_NUM_TYPE_U16] = "_u16",
+            [BEE_NUM_TYPE_U32] = "_u32",
+            [BEE_NUM_TYPE_U64] = "_u64",
+            [BEE_NUM_TYPE_F32] = "_f32",
+            [BEE_NUM_TYPE_F64] = "_f64",
+            NULL,
     };
     for (size_t ss = 0L; suffixes[ss] != NULL; ss++) {
-        if (jit_strcmp(suffixes[ss], s+i) == 0) {
+        if (jit_strcmp(suffixes[ss], s + i) == 0) {
             *type = ss;
             i += jit_strlen(suffixes[ss]);
         }
@@ -225,7 +225,7 @@ static size_t try_read_lit_str(const char *s, struct bee_error *error) {
     for (i = 1; i < sl; i++) {
         if (*(s + i) == '\\' && i + 1 < sl) {
             if (*(s + i + 1) == '"') {
-                i +=1 ;
+                i += 1;
                 continue;
             }
         }
@@ -306,7 +306,8 @@ struct bee_token bee_token_next(struct bee_token prev) {
             .data = prev.data,
             .off = prev.off + prev.len,
             .len = 0L,
-            .row =  prev.type == BEE_TOKEN_TYPE_EOL ? prev.row + count_new_lines(prev.data + prev.off, prev.len) : prev.row,
+            .row =  prev.type == BEE_TOKEN_TYPE_EOL ? prev.row + count_new_lines(prev.data + prev.off, prev.len)
+                                                    : prev.row,
             .col = prev.type == BEE_TOKEN_TYPE_EOL ? 0 : prev.len + prev.col,
             .type = BEE_TOKEN_TYPE_EOF,
             .keyword_type = BEE_KEYWORD_NONE,

@@ -753,21 +753,21 @@ static void test_parse_let_in(void **state) {
     assert_string_equal(aux1->as_str, "x");
     bee_ast_node_free(node);
 
-    error = (struct bee_error){.type=BEE_ERROR_NONE};
+    error = (struct bee_error) {.type=BEE_ERROR_NONE};
     start = bee_token_start("test", "let x := 123");
     token = bee_token_next(start);
     node = bee_parse_let_in(&token, &error);
     assert_int_equal(error.type, BEE_ERROR_PARSER_WAS_EXPECTING_IN);
     assert_null(node);
 
-    error = (struct bee_error){.type=BEE_ERROR_NONE};
+    error = (struct bee_error) {.type=BEE_ERROR_NONE};
     start = bee_token_start("test", "let 123");
     token = bee_token_next(start);
     node = bee_parse_let_in(&token, &error);
     assert_int_equal(error.type, BEE_ERROR_PARSER_WAS_EXPECTING_ID);
     assert_null(node);
 
-    error = (struct bee_error){.type=BEE_ERROR_NONE};
+    error = (struct bee_error) {.type=BEE_ERROR_NONE};
     start = bee_token_start("test", "let id := 123 in");
     token = bee_token_next(start);
     node = bee_parse_let_in(&token, &error);

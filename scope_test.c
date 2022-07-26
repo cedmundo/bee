@@ -20,10 +20,10 @@ static void test_scope_bind_get(void **state) {
     jit_type_t s = jit_type_create_signature(jit_abi_cdecl, jit_type_void, NULL, 0, 0);
     jit_function_t f = jit_function_create(ctx, s);
     jit_value_t v = jit_value_create_nint_constant(f, jit_type_int, 0x1FA);
-    union bee_object o = {.as_value = v};
+    struct bee_slot o = {.as_value = v};
     assert_true(bee_scope_bind(scope, "value", o));
 
-    union bee_object r;
+    struct bee_slot r;
     assert_true(bee_scope_get(scope, "value", &r));
     assert_int_equal(jit_value_get_nint_constant(r.as_value), 0x1FA);
 
@@ -51,7 +51,7 @@ static void test_scope_fails_on_redefine(void **state) {
     jit_type_t s = jit_type_create_signature(jit_abi_cdecl, jit_type_void, NULL, 0, 0);
     jit_function_t f = jit_function_create(ctx, s);
     jit_value_t v = jit_value_create_nint_constant(f, jit_type_int, 0x1FA);
-    union bee_object o = {.as_value = v};
+    struct bee_slot o = {.as_value = v};
 
     assert_true(bee_scope_bind(scope, "value", o));
     assert_false(bee_scope_bind(scope, "value", o));
@@ -73,14 +73,14 @@ static void test_scope_push_bind_and_pop(void **state) {
     jit_function_t f = jit_function_create(ctx, s);
     jit_value_t v0 = jit_value_create_nint_constant(f, jit_type_int, 0xA);
     jit_value_t v1 = jit_value_create_nint_constant(f, jit_type_int, 0xB);
-    union bee_object o0 = {.as_value = v0};
-    union bee_object o1 = {.as_value = v1};
+    struct bee_slot o0 = {.as_value = v0};
+    struct bee_slot o1 = {.as_value = v1};
 
     assert_true(bee_scope_bind(scope, "value", o0));
     bee_scope_push(scope);
     assert_true(bee_scope_bind(scope, "value", o1));
 
-    union bee_object r;
+    struct bee_slot r;
     assert_true(bee_scope_get(scope, "value", &r));
     assert_int_equal(jit_value_get_nint_constant(r.as_value), 0xB);
 

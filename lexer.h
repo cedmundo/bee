@@ -4,6 +4,7 @@
 
 #ifndef BEE_LEXER_H
 #define BEE_LEXER_H
+
 #include <stddef.h>
 #include "errors.h"
 
@@ -93,6 +94,7 @@ struct bee_token {
 };
 
 struct bee_token bee_token_start(const char *name, const char *data);
+
 struct bee_token bee_token_next(struct bee_token prev);
 
 #endif //BEE_LEXER_H
