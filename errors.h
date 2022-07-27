@@ -5,6 +5,7 @@
 #ifndef BEE_ERRORS_H
 #define BEE_ERRORS_H
 
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -20,6 +21,7 @@ enum bee_error_type {
     BEE_ERROR_PARSER_WAS_EXPECTING_ASSIGN,
     BEE_ERROR_PARSER_WAS_EXPECTING_COMMA,
     BEE_ERROR_PARSER_WAS_EXPECTING_RPAR,
+    BEE_ERROR_TYPE_CHECK,
     BEE_ERROR_TYPES,
 };
 
@@ -37,6 +39,9 @@ void bee_set_error(struct bee_error *error, enum bee_error_type type,
                    const char *filename, size_t row, size_t col, const char *fmt, ...);
 
 void bee_set_error_type(struct bee_error *error, enum bee_error_type type, const char *fmt, ...);
+
+void bee_set_error_va(struct bee_error *error, enum bee_error_type type,
+                      const char *filename, size_t row, size_t col, const char *fmt, va_list args);
 
 bool bee_has_error(struct bee_error *error);
 

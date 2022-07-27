@@ -18,9 +18,12 @@ static size_t get_arg_count(struct bee_ast_node *root) {
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
-static void
-flatten_args(jit_function_t f, struct bee_ast_node *root, struct bee_compiler_error *error, struct bee_scope *scope,
-             jit_value_t *values) {
+static void flatten_args(
+        jit_function_t f,
+        struct bee_ast_node *root,
+        struct bee_compiler_error *error,
+        struct bee_scope *scope,
+        jit_value_t *values) {
     struct bee_ast_node *node = root;
     size_t i = 0L;
     while (node != NULL && node->type == BEE_AST_NODE_ARG) {

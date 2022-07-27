@@ -17,22 +17,6 @@ void bee_set_no_error(struct bee_error *error, const char *filename) {
     jit_strcpy(error->msg, "no error");
 }
 
-void bee_set_error(struct bee_error *error, enum bee_error_type type,
-                   const char *filename, size_t row, size_t col, const char *fmt, ...) {
-    assert(error != NULL && "error is null");
-    error->type = type;
-    error->filename = filename;
-    error->row = row;
-    error->col = col;
-
-    if (fmt != NULL) {
-        va_list(args);
-        va_start(args, fmt);
-        vsprintf(error->msg, fmt, args);
-        va_end(args);
-    }
-}
-
 void bee_set_error_type(struct bee_error *error, enum bee_error_type type, const char *fmt, ...) {
     assert(error != NULL && "error is null");
     error->type = type;
@@ -41,6 +25,28 @@ void bee_set_error_type(struct bee_error *error, enum bee_error_type type, const
         va_start(args, fmt);
         vsprintf(error->msg, fmt, args);
         va_end(args);
+    }
+}
+
+void bee_set_error(struct bee_error *error, enum bee_error_type type,
+                   const char *filename, size_t row, size_t col, const char *fmt, ...) {
+    va_list(args);
+    va_start(args, fmt);
+    bee_set_error_va(error, type, filename, row, col, fmt, args);
+    va_end(args);
+}
+
+
+void bee_set_error_va(struct bee_error *error, enum bee_error_type type,
+                      const char *filename, size_t row, size_t col, const char *fmt, va_list args) {
+    assert(error != NULL && "error is null");
+    error->type = type;
+    error->filename = filename;
+    error->row = row;
+    error->col = col;
+
+    if (fmt != NULL) {
+        vsprintf(error->msg, fmt, args);
     }
 }
 
