@@ -52,6 +52,7 @@ static bool bee_type_expr_equal(struct bee_type_expr *a, struct bee_type_expr *b
     }
 }
 
+// TODO: Add intermediate representation to insert operations (such automatic casting when promoting or demoting a type)
 struct bee_type_expr *bee_type_check(struct bee_ast_node *node) {
     struct bee_type_expr *type_expr = NULL;
     switch (node->type) {
@@ -98,6 +99,7 @@ struct bee_type_expr *bee_type_check(struct bee_ast_node *node) {
         case BEE_AST_NODE_UNA_ARI_NEG:
         case BEE_AST_NODE_UNA_LOG_NEG:
         case BEE_AST_NODE_UNA_BIT_NEG:
+            // TODO: Check if operation can be applied to type
             type_expr = bee_type_check(node->left);
             break;
         case BEE_AST_NODE_BIN_ADD:
@@ -119,6 +121,7 @@ struct bee_type_expr *bee_type_check(struct bee_ast_node *node) {
         case BEE_AST_NODE_BIN_BIT_OR:
         case BEE_AST_NODE_BIN_BIT_XOR:
             type_expr = bee_type_check(node->left);
+            // TODO: Check if operation can be applied between types
             if (!bee_type_expr_equal(type_expr, bee_type_check(node->right))) {
                 // TODO: type as string
                 // TODO: node type as string
@@ -126,6 +129,8 @@ struct bee_type_expr *bee_type_check(struct bee_ast_node *node) {
                                                     "cannot perform `[binary]` operation on types `[left]` and `[right]`");
             }
             break;
+
+        // TODO: Implement type checking for call and let-in (and thus duck assign) expressions
         case BEE_AST_NODE_BIN_DUCK_ASSIGN:
         case BEE_AST_NODE_LET_IN_EXPR:
         case BEE_AST_NODE_CALL:
