@@ -7,6 +7,7 @@
 #include <stddef.h>
 #define UNUSED(x) ((void)(x))
 #define UNUSED_TYPE(x) ((void)(x *) 0)
+typedef void(* destructor_f)(void *);
 
 struct bee_loc {
     const char *filename;
