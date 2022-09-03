@@ -16,6 +16,9 @@ struct bee_error {
 // inits an error so it can be safely evaluated if its set or not
 void bee_error_init(struct bee_error *error);
 
+// remove the message and location from an error
+void bee_error_clear(struct bee_error *error);
+
 // set an error with a formatted message (standard). Error must not be nil.
 void bee_error_set(struct bee_error *error, struct bee_loc loc, const char *msg, ...);
 

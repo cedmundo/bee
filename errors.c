@@ -13,6 +13,16 @@ void bee_error_init(struct bee_error *error) {
     assert(memset((char *)error->msg, 0, BEE_ERROR_MSG_SIZE) == error->msg);
 }
 
+void bee_error_clear(struct bee_error *error) {
+    assert(error != NULL);
+    assert(memset((char *)error->msg, 0, BEE_ERROR_MSG_SIZE) == error->msg);
+    error->loc = (struct bee_loc) {
+        .filename = NULL,
+        .row = 1L,
+        .col = 0L,
+    };
+}
+
 void bee_error_set(struct bee_error *error, struct bee_loc loc, const char *msg, ...) {
     assert(error != NULL);
     assert(memset((char *)error->msg, 0, BEE_ERROR_MSG_SIZE) == error->msg);
