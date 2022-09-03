@@ -13,12 +13,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(cmake/FetchCMocka.cmake)
 
 # Macros
-macro(setup_test_target TARGET TEST_SOURCES)
+macro(setup_test TARGET TEST_SOURCES)
     add_executable(${TARGET} ${ARGN} ${TARGET}.c)
     target_link_libraries(${TARGET} PRIVATE cmocka-static)
+    add_test(NAME ${TARGET} COMMAND ${TARGET})
 endmacro()
 
 # Testing
 enable_testing()
-setup_test_target(common_test common.h common.c)
-add_test(NAME common_test COMMAND common_test)
+setup_test(common_test common.h common.c)
+setup_test(errors_test common.h common.c errors.h errors.c)
