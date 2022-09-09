@@ -123,6 +123,24 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U8);
     assert_int_equal(token.loc.row, 1);
     assert_int_equal(token.loc.col, 0);
+
+    bee_error_clear(&error);
+    token = bee_token_start("test_tokenize", "0b99");
+    bee_token_next(token, &error);
+    assert_true(bee_error_is_set(&error));
+    assert_string_equal(error.msg, "digit `9` is outside number base");
+
+    bee_error_clear(&error);
+    token = bee_token_start("test_tokenize", "0-1");
+    token = bee_token_next(token, &error);
+    assert_false(bee_error_is_set(&error));
+    assert_int_equal(token.tag, BEE_TOKEN_TAG_NUMBER);
+    assert_int_equal(token.len, 1);
+    assert_memory_equal(token.data, "0", token.len);
+    assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
+    assert_int_equal(token.num_type, BEE_NUM_TYPE_U32);
+    assert_int_equal(token.loc.row, 1);
+    assert_int_equal(token.loc.col, 0);
 }
 
 static void test_tokenize_str(void **state) {

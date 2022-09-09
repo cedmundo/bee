@@ -6,6 +6,7 @@
 #define BEE_DYNAMIC_ARRAY_H
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include "common.h"
 
 enum bee_da_status {
@@ -20,7 +21,7 @@ struct bee_dynamic_array {
     size_t growth_size;
     size_t elem_size;
     size_t elem_cap;
-    size_t stack_top;
+    int64_t stack_top;
 };
 
 // creates a new dynamic array with a default size and a growth constant

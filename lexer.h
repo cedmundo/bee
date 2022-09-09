@@ -49,12 +49,13 @@ enum bee_punct_tag {
     BEE_PUNCT_PERCENT,  // %
     BEE_PUNCT_AMPERSAND, // &
     BEE_PUNCT_CARET,    // ^
-    BEE_PUNCT_VBAR,     // |
+    BEE_PUNCT_PIPE,     // |
     BEE_PUNCT_TILDE,    // ~
     BEE_PUNCT_LPAR,     // (
     BEE_PUNCT_RPAR,     // )
     BEE_PUNCT_COMMA,    // ,
     BEE_PUNCT_BANG,     // !
+    BEE_PUNCT_DOT,     // .
     BEE_PUNCT_COUNT
 };
 

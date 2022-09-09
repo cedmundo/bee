@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#define TRACKED_PUNCT_TYPES 26
+#define TRACKED_PUNCT_TYPES 27
 static_assert(BEE_PUNCT_COUNT == TRACKED_PUNCT_TYPES,
               "Exhaustive punct string table");
 static const char *puncts_table[] = {
@@ -30,12 +30,13 @@ static const char *puncts_table[] = {
         [BEE_PUNCT_PERCENT] = "%",
         [BEE_PUNCT_AMPERSAND] = "&",
         [BEE_PUNCT_CARET] = "^",
-        [BEE_PUNCT_VBAR] = "|",
+        [BEE_PUNCT_PIPE] = "|",
         [BEE_PUNCT_TILDE] = "~",
         [BEE_PUNCT_LPAR] = "(",
         [BEE_PUNCT_RPAR] = ")",
         [BEE_PUNCT_COMMA] = ",",
         [BEE_PUNCT_BANG] = "!",
+        [BEE_PUNCT_DOT] = ".",
 };
 
 #define TRACKED_KEYWORD_TYPES 4
@@ -165,10 +166,20 @@ static size_t try_read_lit_num(const char *s, struct bee_loc loc, bool *is_float
     } else if (strncmp("0o", s + i, 2) == 0) {
         i += 2;
         *base = BEE_NUM_BASE_OCT;
+    } else if (!is_digit(*(s + i), BEE_NUM_BASE_DEC) && *(s + i) != '.') {
+        return 0;
     }
 
     for (; i < sl; i++) {
-        if (!is_digit(*(s + i), *base)) {
+        char digit = *(s + i);
+        if (digit == '.') {
+            break;
+        }
+
+        if (is_digit(digit, BEE_NUM_BASE_HEX) && !is_digit(digit, *base)) {
+            bee_error_set(error, loc, "digit `%c` is outside number base", *(s + i));
+            return 0;
+        } else if (!is_digit(digit, BEE_NUM_BASE_HEX)) {
             break;
         }
     }
@@ -185,7 +196,13 @@ static size_t try_read_lit_num(const char *s, struct bee_loc loc, bool *is_float
     }
 
     for (; i < sl; i++) {
-        if (!is_digit(*(s + i), *base)) {
+        if (memcmp(s+i, "e-", 2) == 0L || memcmp(s+i, "e+", 2) == 0L) {
+            i+=2;
+            continue;
+        }
+
+        char digit = *(s + i);
+        if (!is_digit(digit, *base)) {
             break;
         }
     }
