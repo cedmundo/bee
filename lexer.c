@@ -307,7 +307,7 @@ struct bee_token bee_token_start(const char *filename, const char *data) {
             .loc = {
                     .filename = filename,
                     .row = 1L,
-                    .col = 0L,
+                    .col = 1L,
             },
             .data = data,
             .len = 0L,
@@ -323,7 +323,7 @@ struct bee_token bee_token_next(struct bee_token prev, struct bee_error *error) 
                     .filename = prev.loc.filename,
                     .row =  prev.tag == BEE_TOKEN_TAG_EOL ? prev.loc.row + count_new_lines(prev.data, prev.len)
                                                           : prev.loc.row,
-                    .col = prev.tag == BEE_TOKEN_TAG_EOL ? 0 : prev.len + prev.loc.col,
+                    .col = prev.tag == BEE_TOKEN_TAG_EOL ? 1 : prev.len + prev.loc.col,
             },
             .data = prev.data + prev.len,
             .len = 0L,

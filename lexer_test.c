@@ -22,7 +22,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "12.12");
@@ -34,7 +34,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_F32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "12 21");
@@ -46,7 +46,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
@@ -56,7 +56,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 3);
+    assert_int_equal(token.loc.col, 4);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "-10");
@@ -67,7 +67,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_I32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "10.10");
@@ -78,7 +78,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_F32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "10.10_f32");
@@ -89,7 +89,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_F32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "0xFA");
@@ -100,7 +100,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_HEX);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "-0xFA");
@@ -111,7 +111,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_HEX);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_I32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "-0b10_u8");
@@ -122,7 +122,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_BIN);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U8);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "0b99");
@@ -140,7 +140,7 @@ static void test_tokenize_num(void **state) {
     assert_int_equal(token.num_base, BEE_NUM_BASE_DEC);
     assert_int_equal(token.num_type, BEE_NUM_TYPE_U32);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 }
 
 static void test_tokenize_str(void **state) {
@@ -366,7 +366,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 4);
+    assert_int_equal(token.loc.col, 5);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
@@ -374,7 +374,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 8);
+    assert_int_equal(token.loc.col, 9);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "a\nb");
@@ -383,14 +383,14 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(token.tag, BEE_TOKEN_TAG_EOL);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 1);
+    assert_int_equal(token.loc.col, 2);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
@@ -398,7 +398,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 2);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "a\n\n\nb");
@@ -407,7 +407,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
@@ -415,7 +415,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_EOL);
     assert_int_equal(token.len, 3);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 1);
+    assert_int_equal(token.loc.col, 2);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
@@ -423,7 +423,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 4);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_start("test_tokenize", "a\n  \n  \nb");
@@ -432,14 +432,14 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(token.tag, BEE_TOKEN_TAG_EOL);
     assert_int_equal(token.loc.row, 1);
-    assert_int_equal(token.loc.col, 1);
+    assert_int_equal(token.loc.col, 2);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);
@@ -447,7 +447,7 @@ static void test_tokenize_spaces(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_ID);
     assert_int_equal(token.len, 1);
     assert_int_equal(token.loc.row, 4);
-    assert_int_equal(token.loc.col, 0);
+    assert_int_equal(token.loc.col, 1);
 }
 
 int main() {
