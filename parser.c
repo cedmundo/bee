@@ -297,7 +297,7 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
         list->as_array = bee_dynamic_array_new(sizeof(struct bee_ast_node *), 2, 5, bee_ast_node_free);
 
         // First element on list it's callee
-        if (!bee_dynamic_array_push_back(list->as_array, &node)) {
+        if (bee_dynamic_array_push_back(list->as_array, &node) != BEE_DA_STATUS_OK) {
             bee_error_set(error, rest->loc, "could not append an id into a path expr");
             bee_ast_node_free(node);
             return NULL;
@@ -313,7 +313,7 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
                 return NULL;
             }
 
-            if (!bee_dynamic_array_push_back(list->as_array, &arg)) {
+            if (bee_dynamic_array_push_back(list->as_array, &arg) != BEE_DA_STATUS_OK) {
                 bee_error_set(error, rest->loc, "could not append an argument into call expr");
                 bee_ast_node_free(node);
                 return NULL;
@@ -358,7 +358,7 @@ struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_erro
             struct bee_ast_node *list = bee_ast_node_new();
             list->tag = BEE_AST_NODE_PATH_EXPR;
             list->as_array = bee_dynamic_array_new(sizeof(struct bee_ast_node *), 2, 5, bee_ast_node_free);
-            if (!bee_dynamic_array_push_back(list->as_array, &node)) {
+            if (bee_dynamic_array_push_back(list->as_array, &node) != BEE_DA_STATUS_OK) {
                 bee_error_set(error, rest->loc, "could not append an id into a path expr");
                 bee_ast_node_free(node);
                 return NULL;
@@ -380,7 +380,7 @@ struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_erro
                     return NULL;
                 }
 
-                if (!bee_dynamic_array_push_back(list->as_array, &id_node)) {
+                if (bee_dynamic_array_push_back(list->as_array, &id_node) != BEE_DA_STATUS_OK) {
                     bee_error_set(error, rest->loc, "could not append an id into a path expr");
                     bee_ast_node_free(node);
                     return NULL;

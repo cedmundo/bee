@@ -203,6 +203,10 @@ static size_t try_read_lit_num(const char *s, struct bee_loc loc, bool *is_float
 
         char digit = *(s + i);
         if (!is_digit(digit, *base)) {
+            if(*s == '.' && i == 1) {
+                return 0;
+            }
+
             break;
         }
     }

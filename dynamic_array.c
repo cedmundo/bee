@@ -69,8 +69,12 @@ enum bee_da_status bee_dynamic_array_set(struct bee_dynamic_array *array, size_t
     return BEE_DA_STATUS_OK;
 }
 
-bool be_dynamic_array_is_empty_stack(struct bee_dynamic_array *array) {
+bool bee_dynamic_array_is_empty_stack(struct bee_dynamic_array *array) {
     return array->stack_top == -1;
+}
+
+size_t bee_dynamic_array_count(struct bee_dynamic_array *array) {
+    return array->stack_top+1;
 }
 
 enum bee_da_status bee_dynamic_array_push_back(struct bee_dynamic_array *array, void *src) {
@@ -89,7 +93,7 @@ enum bee_da_status bee_dynamic_array_push_back(struct bee_dynamic_array *array, 
 enum bee_da_status bee_dynamic_array_peek_back(struct bee_dynamic_array *array, void *dst) {
     assert(array != NULL && "bee_dynamic_array_peek_back: array must not be null");
     assert(dst != NULL && "bee_dynamic_array_peek_back: dst must not be null");
-    if (be_dynamic_array_is_empty_stack(array)) {
+    if (bee_dynamic_array_is_empty_stack(array)) {
         return BEE_DA_STATUS_INDEX_OUT_OF_RANGE;
     }
 

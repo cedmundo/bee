@@ -291,7 +291,7 @@ static void test_parse_str_lit(void **state) {
     struct bee_ast_node *node;
 
     bee_error_clear(&error);
-    start = bee_token_start("test_parse_bool_lit", "\"an string\"");
+    start = bee_token_start("test_parse_str_lit", "\"an string\"");
     rest = bee_token_next(start, &error);
     node = bee_parse_lit_expr(&rest, &error);
     assert_non_null(node);

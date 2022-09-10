@@ -37,7 +37,10 @@ enum bee_da_status bee_dynamic_array_get(struct bee_dynamic_array *array, size_t
 enum bee_da_status bee_dynamic_array_set(struct bee_dynamic_array *array, size_t idx, void *src);
 
 // returns true if dynamic_array is treated as a stack and its empty
-bool be_dynamic_array_is_empty_stack(struct bee_dynamic_array *array);
+bool bee_dynamic_array_is_empty_stack(struct bee_dynamic_array *array);
+
+// returns the count of elements on a stack
+size_t bee_dynamic_array_count(struct bee_dynamic_array *array);
 
 // push a value into array as a stack
 enum bee_da_status bee_dynamic_array_push_back(struct bee_dynamic_array *array, void *src);
