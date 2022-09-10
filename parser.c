@@ -298,16 +298,19 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
 
         // First element on list it's callee
         if (bee_dynamic_array_push_back(list->as_array, &node) != BEE_DA_STATUS_OK) {
-            bee_error_set(error, rest->loc, "could not append an id into a path expr");
+            bee_error_set(error, rest->loc, "could not append an id into a call expr");
             bee_ast_node_free(node);
             return NULL;
         }
 
         // Next elements on list are arguments
-        while (match_punct(*rest, BEE_PUNCT_COMMA)) {
-            consume(rest, error);
+        do {
+            if (match_punct(*rest, BEE_PUNCT_RPAR)) {
+                break;
+            }
 
-            struct bee_ast_node *arg = bee_parse_expr(rest, error);
+            // TODO(cedmundo): Important !!!! replace this one to bee_parse_expr (top levels are not tested yet)
+            struct bee_ast_node *arg = bee_parse_call_expr(rest, error);
             if (bee_error_is_set(error)) {
                 bee_ast_node_free(node);
                 return NULL;
@@ -318,11 +321,18 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
                 bee_ast_node_free(node);
                 return NULL;
             }
-        }
 
-        // Close parenthesis
+            if (match_punct(*rest, BEE_PUNCT_COMMA)) {
+                consume(rest, error);
+            } else {
+                break;
+            }
+        } while (!match_tag(*rest, BEE_TOKEN_TAG_EOF));
+
         if (!match_punct(*rest, BEE_PUNCT_RPAR)) {
             bee_error_set(error, rest->loc, "unclosed parenthesis, opening pair was at %ld:%ld", call_start.loc.row, call_start.loc.col);
+            bee_ast_node_free(node);
+            return NULL;
         }
 
         consume(rest, error);
