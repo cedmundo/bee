@@ -310,7 +310,7 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
             }
 
             // TODO(cedmundo): Important !!!! replace this one to bee_parse_expr (top levels are not tested yet)
-            struct bee_ast_node *arg = bee_parse_call_expr(rest, error);
+            struct bee_ast_node *arg = bee_parse_unary_expr(rest, error);
             if (bee_error_is_set(error)) {
                 bee_ast_node_free(node);
                 return NULL;
