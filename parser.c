@@ -237,7 +237,7 @@ struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_er
     };
 
     struct bee_ast_node *node = NULL;
-    if (prec == 8) {
+    if (prec >= 8) {
         node = bee_parse_unary_expr(rest, error);
     } else {
         node = bee_parse_binary_expr(rest, error, prec + 1);
@@ -250,12 +250,13 @@ struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_er
 
     bool parse_same_prec = false;
     do {
-        int8_t i = 0;
-        for (enum bee_punct_tag punct = prec_punct_table[prec][i]; i < 6 && punct != BEE_PUNCT_NONE; i++) {
+        for (int8_t i = 0, punct = prec_punct_table[prec][i]; i < 6 && punct != BEE_PUNCT_NONE; i++, punct = prec_punct_table[prec][i]) {
+            parse_same_prec = false;
+
             if (match_punct(*rest, punct)) {
                 struct bee_token token = consume(rest, error);
                 struct bee_ast_node *right = NULL;
-                if (prec == 8) {
+                if (prec >= 8) {
                     right = bee_parse_unary_expr(rest, error);
                 } else {
                     right = bee_parse_binary_expr(rest, error, prec + 1);
@@ -268,6 +269,7 @@ struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_er
                 }
 
                 parse_same_prec = true;
+                break;
             }
         }
     } while (parse_same_prec);
@@ -309,8 +311,7 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
                 break;
             }
 
-            // TODO(cedmundo): Important !!!! replace this one to bee_parse_expr (top levels are not tested yet)
-            struct bee_ast_node *arg = bee_parse_unary_expr(rest, error);
+            struct bee_ast_node *arg = bee_parse_expr(rest, error);
             if (bee_error_is_set(error)) {
                 bee_ast_node_free(node);
                 return NULL;
