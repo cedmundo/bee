@@ -53,6 +53,9 @@ enum bee_ast_node_tag {
     BEE_AST_NODE_BIN_BIT_XOR_EXPR,
     BEE_AST_NODE_BIN_LOG_AND_EXPR,
     BEE_AST_NODE_BIN_LOG_OR_EXPR,
+    BEE_AST_NODE_BIN_ADD_TYPE_EXPR,
+    BEE_AST_NODE_BIN_MUL_TYPE_EXPR,
+    BEE_AST_NODE_BIN_DECL_TYPE_EXPR,
     BEE_AST_NODE_COUNT
 };
 
@@ -86,6 +89,10 @@ const char *bee_ast_node_tag_get_name(enum bee_ast_node_tag tag);
 
 struct bee_ast_node *bee_parse_compilation_unit(struct bee_token start_token, struct bee_error *error);
 
+struct bee_ast_node *bee_parse_type_expr(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_parse_binary_type_expr(struct bee_token *rest, struct bee_error *error, uint32_t prec);
+struct bee_ast_node *bee_parse_primary_type_expr(struct bee_token *rest, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_error *error);
 struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_error *error, uint32_t prec);
 struct bee_ast_node *bee_parse_unary_expr(struct bee_token *rest, struct bee_error *error);
@@ -94,5 +101,6 @@ struct bee_ast_node *bee_parse_primary_expr(struct bee_token *rest, struct bee_e
 struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_error *error);
 struct bee_ast_node *bee_parse_id_expr(struct bee_token *rest, struct bee_error *error);
 struct bee_ast_node *bee_parse_lit_expr(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_must_parse_id_expr(struct bee_token *rest, struct bee_error *error);
 
 #endif //BEE_PARSER_H

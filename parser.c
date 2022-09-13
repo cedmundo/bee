@@ -48,6 +48,21 @@ static struct bee_ast_node *bee_ast_node_new_binary(struct bee_token at_token,
     return node;
 }
 
+static struct bee_ast_node *bee_ast_node_new_binary_type(struct bee_token at_token,
+                                                    enum bee_ast_node_tag tag,
+                                                    struct bee_ast_node *left,
+                                                    struct bee_ast_node *right) {
+    assert(tag >= BEE_AST_NODE_BIN_ADD_TYPE_EXPR && tag <= BEE_AST_NODE_BIN_DECL_TYPE_EXPR && "bee_ast_node_new_binary_type: tag is not a binary operator");
+    assert(left != NULL && "bee_ast_node_new_unary: left cannot be null");
+    assert(right != NULL && "bee_ast_node_new_unary: right cannot be null");
+    struct bee_ast_node *node = bee_ast_node_new();
+    node->tag = tag;
+    node->loc = at_token.loc;
+    node->as_pair.left = left;
+    node->as_pair.right = right;
+    return node;
+}
+
 static struct bee_ast_node *bee_ast_node_new_id(struct bee_token token) {
     struct bee_ast_node *node = bee_ast_node_new();
     node->tag = BEE_AST_NODE_ID_EXPR;
@@ -63,7 +78,7 @@ static struct bee_ast_node *bee_ast_node_new_literal(struct bee_token token) {
     return node;
 }
 
-#define TRACKED_BEE_AST_NODE_TAGS 38
+#define TRACKED_BEE_AST_NODE_TAGS 41
 static_assert(TRACKED_BEE_AST_NODE_TAGS == BEE_AST_NODE_COUNT, "Exhaustive ast node name");
 const char *bee_ast_node_tag_get_name(enum bee_ast_node_tag tag) {
     static const char *names[] = {
@@ -105,6 +120,9 @@ const char *bee_ast_node_tag_get_name(enum bee_ast_node_tag tag) {
             [BEE_AST_NODE_BIN_BIT_XOR_EXPR] = "bitwise xor expr",
             [BEE_AST_NODE_BIN_LOG_AND_EXPR] = "logical and expr",
             [BEE_AST_NODE_BIN_LOG_OR_EXPR] = "logical or expr",
+            [BEE_AST_NODE_BIN_ADD_TYPE_EXPR] = "add type expr",
+            [BEE_AST_NODE_BIN_MUL_TYPE_EXPR] = "mul type expr",
+            [BEE_AST_NODE_BIN_DECL_TYPE_EXPR] = "decl type expr",
             [BEE_AST_NODE_COUNT] = "(invalid)"
     };
     return names[tag];
@@ -206,6 +224,87 @@ static struct bee_token consume(struct bee_token *rest, struct bee_error *error)
     struct bee_token current = *rest;
     *rest = bee_token_next(current, error);
     return current;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+struct bee_ast_node *bee_parse_type_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_type_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_type_expr: error cannot be null");
+    return bee_parse_binary_type_expr(rest, error, 0);
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+struct bee_ast_node *bee_parse_binary_type_expr(struct bee_token *rest, struct bee_error *error, uint32_t prec) {
+    assert(rest != NULL && "bee_parse_binary_type_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_binary_type_expr: error cannot be null");
+    assert(prec <= 2 && "bee_parse_binary_type_expr: prec cannot be greater than 3");
+    enum bee_punct_tag prec_punct_table[3] = {
+            BEE_PUNCT_COMMA,
+            BEE_PUNCT_PIPE,
+            BEE_PUNCT_COLON,
+    };
+    enum bee_ast_node_tag equiv_tag_table[3] = {
+            BEE_AST_NODE_BIN_MUL_TYPE_EXPR,
+            BEE_AST_NODE_BIN_ADD_TYPE_EXPR,
+            BEE_AST_NODE_BIN_DECL_TYPE_EXPR,
+    };
+
+    struct bee_ast_node *node = NULL;
+    if (prec >= 2) {
+        node = bee_parse_primary_type_expr(rest, error);
+    } else {
+        node = bee_parse_binary_type_expr(rest, error, prec + 1);
+    }
+
+    if (bee_error_is_set(error)) {
+        bee_ast_node_free(node);
+        return NULL;
+    }
+
+    do {
+        enum bee_punct_tag punct = prec_punct_table[prec];
+        enum bee_ast_node_tag equiv_tag = equiv_tag_table[prec];
+
+        if (match_punct(*rest, punct)) {
+            struct bee_token token = consume(rest, error);
+            struct bee_ast_node *right = NULL;
+            if (prec >= 2) {
+                right = bee_parse_primary_type_expr(rest, error);
+            } else {
+                right = bee_parse_binary_type_expr(rest, error, prec + 1);
+            }
+
+            node = bee_ast_node_new_binary_type(token, equiv_tag, node, right);
+            if (bee_error_is_set(error)) {
+                bee_ast_node_free(node);
+                return NULL;
+            }
+            
+            continue;
+        }
+
+        break;
+    } while (!match_tag(*rest, BEE_TOKEN_TAG_EOF));
+    return node;
+}
+
+// NOLINTNEXTLINE(misc-no-recursion)
+struct bee_ast_node *bee_parse_primary_type_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_primary_type_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_primary_type_expr: error cannot be null");
+    if (match_punct(*rest, BEE_PUNCT_LPAR)) {
+        struct bee_token par_start = consume(rest, error);
+        struct bee_ast_node *node = bee_parse_type_expr(rest, error);
+        if (!match_punct(*rest, BEE_PUNCT_RPAR)) {
+            bee_error_set(error, rest->loc, "unclosed parenthesis, opening pair was at %ld:%ld",
+                          par_start.loc.row, par_start.loc.col);
+        }
+
+        consume(rest, error);
+        return node;
+    }
+
+    return bee_must_parse_id_expr(rest, error);
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
@@ -427,6 +526,19 @@ struct bee_ast_node *bee_parse_id_expr(struct bee_token *rest, struct bee_error 
     }
 
     return bee_parse_lit_expr(rest, error);
+}
+
+
+// NOLINTNEXTLINE(misc-no-recursion)
+struct bee_ast_node *bee_must_parse_id_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_id_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_id_expr: error cannot be null");
+    if (match_tag(*rest, BEE_TOKEN_TAG_ID)) {
+        return bee_ast_node_new_id(consume(rest, error));
+    }
+
+    bee_error_set(error, rest->loc, "unexpected token `%.*s`, was expecting `id`", rest->len, rest->data);
+    return NULL;
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
