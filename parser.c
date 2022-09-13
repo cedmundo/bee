@@ -175,7 +175,7 @@ void bee_ast_node_free(void *maybe_node) {
     free(node);
 }
 
-struct bee_ast_node *bee_ast_node_parse_compilation_unit(struct bee_token start_token, struct bee_error *error) {
+struct bee_ast_node *bee_parse_compilation_unit(struct bee_token start_token, struct bee_error *error) {
     struct bee_token rest = bee_token_next(start_token, error);
     if (bee_error_is_set(error)) {
         return NULL;
@@ -201,6 +201,8 @@ static bool match_keyword(struct bee_token token,
 }
 
 static struct bee_token consume(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "consume: rest cannot be null");
+    assert(error != NULL && "consume: error cannot be null");
     struct bee_token current = *rest;
     *rest = bee_token_next(current, error);
     return current;
@@ -208,11 +210,16 @@ static struct bee_token consume(struct bee_token *rest, struct bee_error *error)
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_expr: error cannot be null");
     return bee_parse_binary_expr(rest, error, 0);
 }
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_error *error, uint32_t prec) {
+    assert(rest != NULL && "bee_parse_binary_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_binary_expr: error cannot be null");
+    assert(prec <= 8 && "bee_parse_binary_expr: prec cannot be greater than 8");
     enum bee_punct_tag prec_punct_table[][6] = {
             {BEE_PUNCT_D_PIPE,    BEE_PUNCT_NONE,  BEE_PUNCT_NONE,    BEE_PUNCT_NONE, BEE_PUNCT_NONE, BEE_PUNCT_NONE},
             {BEE_PUNCT_D_AMP,     BEE_PUNCT_NONE,  BEE_PUNCT_NONE,    BEE_PUNCT_NONE, BEE_PUNCT_NONE, BEE_PUNCT_NONE},
@@ -278,6 +285,8 @@ struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_er
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_unary_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_unary_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_unary_expr: error cannot be null");
     if (match_punct(*rest, BEE_PUNCT_PLUS)
         || match_punct(*rest, BEE_PUNCT_MINUS)
         || match_punct(*rest, BEE_PUNCT_BANG)
@@ -291,6 +300,8 @@ struct bee_ast_node *bee_parse_unary_expr(struct bee_token *rest, struct bee_err
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_call_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_call_expr: error cannot be null");
     struct bee_ast_node *node = bee_parse_primary_expr(rest, error);
     if (match_punct(*rest, BEE_PUNCT_LPAR)) {
         struct bee_token call_start = consume(rest, error);
@@ -345,6 +356,8 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_primary_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_primary_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_primary_expr: error cannot be null");
     if (match_punct(*rest, BEE_PUNCT_LPAR)) {
         struct bee_token par_start = consume(rest, error);
         struct bee_ast_node *node = bee_parse_expr(rest, error);
@@ -361,6 +374,8 @@ struct bee_ast_node *bee_parse_primary_expr(struct bee_token *rest, struct bee_e
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_path_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_path_expr: error cannot be null");
     struct bee_ast_node *node = bee_parse_id_expr(rest, error);
     if (node != NULL && node->tag == BEE_AST_NODE_ID_EXPR) {
         if (match_punct(*rest, BEE_PUNCT_DOT)) {
@@ -405,6 +420,8 @@ struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_erro
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_id_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_id_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_id_expr: error cannot be null");
     if (match_tag(*rest, BEE_TOKEN_TAG_ID)) {
         return bee_ast_node_new_id(consume(rest, error));
     }
@@ -414,6 +431,8 @@ struct bee_ast_node *bee_parse_id_expr(struct bee_token *rest, struct bee_error 
 
 // NOLINTNEXTLINE(misc-no-recursion)
 struct bee_ast_node *bee_parse_lit_expr(struct bee_token *rest, struct bee_error *error) {
+    assert(rest != NULL && "bee_parse_lit_expr: rest cannot be null");
+    assert(error != NULL && "bee_parse_lit_expr: error cannot be null");
     if (match_tag(*rest, BEE_TOKEN_TAG_BOOLEAN)
         || match_tag(*rest, BEE_TOKEN_TAG_NUMBER)
         || match_tag(*rest, BEE_TOKEN_TAG_STRING)) {

@@ -84,7 +84,8 @@ struct bee_ast_node *bee_ast_node_new();
 void bee_ast_node_free(void *node);
 const char *bee_ast_node_tag_get_name(enum bee_ast_node_tag tag);
 
-struct bee_ast_node *bee_ast_node_parse_compilation_unit(struct bee_token start_token, struct bee_error *error);
+struct bee_ast_node *bee_parse_compilation_unit(struct bee_token start_token, struct bee_error *error);
+
 struct bee_ast_node *bee_parse_expr(struct bee_token *rest, struct bee_error *error);
 struct bee_ast_node *bee_parse_binary_expr(struct bee_token *rest, struct bee_error *error, uint32_t prec);
 struct bee_ast_node *bee_parse_unary_expr(struct bee_token *rest, struct bee_error *error);
