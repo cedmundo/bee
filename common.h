@@ -20,6 +20,7 @@ typedef void(* bee_free_f)(void *);
 struct bee_rc_header;
 
 void *bee_rc_alloc(size_t size, bee_free_f free_f);
+void *bee_rc_realloc(void *data, size_t new_size);
 void *bee_rc_inc(void *handle);
 void *bee_rc_dec(void *handle);
 size_t bee_rc_get(void *handle);

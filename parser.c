@@ -32,8 +32,8 @@ static struct bee_ast_node *bee_ast_node_new_node_list(struct bee_token at_token
     struct bee_ast_node *node = bee_ast_node_new();
     node->tag = tag;
     node->loc = at_token.loc;
-    node->as_array = bee_dynamic_array_new(sizeof(struct bee_ast_node *),
-                                                 5, 10, bee_ast_node_free);
+    node->as_array = bee_array_new(sizeof(struct bee_ast_node *),
+                                   5, 10, bee_ast_node_free);
     return node;
 }
 
@@ -254,7 +254,7 @@ void bee_ast_node_free(void *maybe_node) {
         case BEE_AST_NODE_IF_STMT:
         case BEE_AST_NODE_PATH_EXPR:
         case BEE_AST_NODE_CALL_EXPR:
-            bee_dynamic_array_free(node->as_array);
+            bee_array_release(node->as_array);
             break;
         case BEE_AST_NODE_COUNT:
         case BEE_AST_NODE_NONE:
@@ -310,7 +310,7 @@ struct bee_ast_node *bee_parse_stmts_block(struct bee_token *rest, struct bee_er
                 break;
             }
 
-            if (bee_dynamic_array_push_back(block->as_array, stmt) != BEE_DA_STATUS_OK) {
+            if (bee_array_push_back(block->as_array, stmt) != BEE_OP_RES_OK) {
                 bee_error_set(error, rest->loc, "could not append a statement into a block");
                 bee_ast_node_free(block);
                 return NULL;
@@ -394,7 +394,7 @@ struct bee_ast_node *bee_parse_if_stmt(struct bee_token *rest, struct bee_error 
 
     struct bee_ast_node *cond_block_pair = bee_ast_node_new_pair(if_start,
             BEE_AST_NODE_COND_BLOCK_PAIR, cond, branch);
-    if (bee_dynamic_array_push_back(if_stmt->as_array, cond_block_pair) != BEE_DA_STATUS_OK) {
+    if (bee_array_push_back(if_stmt->as_array, cond_block_pair) != BEE_OP_RES_OK) {
         bee_error_set(error, rest->loc, "could not append a condition into if statement");
         bee_ast_node_free(cond);
         bee_ast_node_free(branch);
@@ -424,7 +424,7 @@ struct bee_ast_node *bee_parse_if_stmt(struct bee_token *rest, struct bee_error 
         }
 
         cond_block_pair = bee_ast_node_new_pair(elif_start, BEE_AST_NODE_COND_BLOCK_PAIR, cond, branch);
-        if (bee_dynamic_array_push_back(if_stmt->as_array, cond_block_pair) != BEE_DA_STATUS_OK) {
+        if (bee_array_push_back(if_stmt->as_array, cond_block_pair) != BEE_OP_RES_OK) {
             bee_error_set(error, rest->loc, "could not append a condition into if statement");
             bee_ast_node_free(cond);
             bee_ast_node_free(branch);
@@ -445,7 +445,7 @@ struct bee_ast_node *bee_parse_if_stmt(struct bee_token *rest, struct bee_error 
         }
 
         cond_block_pair = bee_ast_node_new_pair(else_start, BEE_AST_NODE_COND_BLOCK_PAIR, NULL, branch);
-        if (bee_dynamic_array_push_back(if_stmt->as_array, cond_block_pair) != BEE_DA_STATUS_OK) {
+        if (bee_array_push_back(if_stmt->as_array, cond_block_pair) != BEE_OP_RES_OK) {
             bee_error_set(error, rest->loc, "could not append a condition into if statement");
             bee_ast_node_free(cond);
             bee_ast_node_free(branch);
@@ -721,7 +721,7 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
         struct bee_ast_node *list = bee_ast_node_new_node_list(call_start, BEE_AST_NODE_CALL_EXPR);
 
         // First element on list it's callee
-        if (bee_dynamic_array_push_back(list->as_array, &node) != BEE_DA_STATUS_OK) {
+        if (bee_array_push_back(list->as_array, &node) != BEE_OP_RES_OK) {
             bee_error_set(error, rest->loc, "could not append an id into a call expr");
             bee_ast_node_free(node);
             return NULL;
@@ -739,7 +739,7 @@ struct bee_ast_node *bee_parse_call_expr(struct bee_token *rest, struct bee_erro
                 return NULL;
             }
 
-            if (bee_dynamic_array_push_back(list->as_array, &arg) != BEE_DA_STATUS_OK) {
+            if (bee_array_push_back(list->as_array, &arg) != BEE_OP_RES_OK) {
                 bee_error_set(error, rest->loc, "could not append an argument into call expr");
                 bee_ast_node_free(node);
                 return NULL;
@@ -793,7 +793,7 @@ struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_erro
 
             // We got a path, so we replace the node with a list containing the path expr
             struct bee_ast_node *list = bee_ast_node_new_node_list(*rest, BEE_AST_NODE_PATH_EXPR);
-            if (bee_dynamic_array_push_back(list->as_array, &node) != BEE_DA_STATUS_OK) {
+            if (bee_array_push_back(list->as_array, &node) != BEE_OP_RES_OK) {
                 bee_error_set(error, rest->loc, "could not append an id into a path expr");
                 bee_ast_node_free(node);
                 return NULL;
@@ -815,7 +815,7 @@ struct bee_ast_node *bee_parse_path_expr(struct bee_token *rest, struct bee_erro
                     return NULL;
                 }
 
-                if (bee_dynamic_array_push_back(list->as_array, &id_node) != BEE_DA_STATUS_OK) {
+                if (bee_array_push_back(list->as_array, &id_node) != BEE_OP_RES_OK) {
                     bee_error_set(error, rest->loc, "could not append an id into a path expr");
                     bee_ast_node_free(node);
                     return NULL;

@@ -9,7 +9,7 @@
 
 #include "common.h"
 #include "errors.h"
-#include "dynamic_array.h"
+#include "array.h"
 #include "lexer.h"
 
 #define BEE_MAX_PARSING_DIGITS 48
@@ -85,7 +85,7 @@ struct bee_ast_node {
           struct bee_ast_node *left;
           struct bee_ast_node *right;
         } as_pair;
-        struct bee_dynamic_array *as_array;
+        struct bee_array *as_array;
         char *as_str;
         uint8_t as_u8;
         uint16_t as_u16;

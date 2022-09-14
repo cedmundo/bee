@@ -26,8 +26,8 @@ static void test_parse_call_noargs(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 1);
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_len(node->as_array), 1);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "a");
     bee_ast_node_free(node);
@@ -39,8 +39,8 @@ static void test_parse_call_noargs(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 1);
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_len(node->as_array), 1);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "a");
     bee_ast_node_free(node);
@@ -52,21 +52,21 @@ static void test_parse_call_noargs(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 1);
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_len(node->as_array), 1);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
 
     assert_int_equal(aux0->tag, BEE_AST_NODE_PATH_EXPR);
-    assert_int_equal(bee_dynamic_array_count(aux0->as_array), 3);
+    assert_int_equal(bee_array_len(aux0->as_array), 3);
 
-    assert_int_equal(bee_dynamic_array_get(aux0->as_array, 0, &aux1), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(aux0->as_array, 0, &aux1), BEE_OP_RES_OK);
     assert_int_equal(aux1->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux1->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(aux0->as_array, 1, &aux1), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(aux0->as_array, 1, &aux1), BEE_OP_RES_OK);
     assert_int_equal(aux1->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux1->as_str, "b");
 
-    assert_int_equal(bee_dynamic_array_get(aux0->as_array, 2, &aux1), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(aux0->as_array, 2, &aux1), BEE_OP_RES_OK);
     assert_int_equal(aux1->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux1->as_str, "c");
     bee_ast_node_free(node);
@@ -88,13 +88,13 @@ static void test_parse_call_single_arg(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 2);
+    assert_int_equal(bee_array_len(node->as_array), 2);
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 1, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 1, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "b");
     bee_ast_node_free(node);
@@ -106,13 +106,13 @@ static void test_parse_call_single_arg(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 2);
+    assert_int_equal(bee_array_len(node->as_array), 2);
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 1, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 1, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_LIT_U32_EXPR);
     assert_int_equal(aux0->as_u32, (uint32_t)123);
     bee_ast_node_free(node);
@@ -124,18 +124,18 @@ static void test_parse_call_single_arg(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 2);
+    assert_int_equal(bee_array_len(node->as_array), 2);
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 1, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 1, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(aux0->as_array), 1);
+    assert_int_equal(bee_array_len(aux0->as_array), 1);
 
     // fetch callee
-    assert_int_equal(bee_dynamic_array_get(aux0->as_array, 0, &aux1), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(aux0->as_array, 0, &aux1), BEE_OP_RES_OK);
     assert_int_equal(aux1->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux1->as_str, "b");
     bee_ast_node_free(node);
@@ -157,21 +157,21 @@ static void test_parse_call_multiple_args(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_CALL_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 4);
+    assert_int_equal(bee_array_len(node->as_array), 4);
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 0, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 1, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 1, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "b");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 2, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 2, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "c");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 3, &aux0), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 3, &aux0), BEE_OP_RES_OK);
     assert_int_equal(aux0->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(aux0->as_str, "d");
     bee_ast_node_free(node);

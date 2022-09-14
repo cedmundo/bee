@@ -54,17 +54,17 @@ static void test_parse_path(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_PATH_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 3);
+    assert_int_equal(bee_array_len(node->as_array), 3);
     struct bee_ast_node *element = NULL;
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &element), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 0, &element), BEE_OP_RES_OK);
     assert_int_equal(element->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(element->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 1, &element), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 1, &element), BEE_OP_RES_OK);
     assert_int_equal(element->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(element->as_str, "b");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 2, &element), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 2, &element), BEE_OP_RES_OK);
     assert_int_equal(element->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(element->as_str, "c");
     bee_ast_node_free(node);
@@ -85,17 +85,17 @@ static void test_parse_primary(void **state) {
     assert_non_null(node);
     assert_false(bee_error_is_set(&error));
     assert_int_equal(node->tag, BEE_AST_NODE_PATH_EXPR);
-    assert_int_equal(bee_dynamic_array_count(node->as_array), 3);
+    assert_int_equal(bee_array_len(node->as_array), 3);
     struct bee_ast_node *element = NULL;
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 0, &element), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 0, &element), BEE_OP_RES_OK);
     assert_int_equal(element->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(element->as_str, "a");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 1, &element), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 1, &element), BEE_OP_RES_OK);
     assert_int_equal(element->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(element->as_str, "b");
 
-    assert_int_equal(bee_dynamic_array_get(node->as_array, 2, &element), BEE_DA_STATUS_OK);
+    assert_int_equal(bee_array_get(node->as_array, 2, &element), BEE_OP_RES_OK);
     assert_int_equal(element->tag, BEE_AST_NODE_ID_EXPR);
     assert_string_equal(element->as_str, "c");
     bee_ast_node_free(node);
