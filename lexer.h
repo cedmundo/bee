@@ -22,6 +22,19 @@ enum bee_token_tag {
 
 enum bee_keyword_tag {
     BEE_KEYWORD_NONE,
+    BEE_KEYWORD_MODULE,
+    BEE_KEYWORD_IMPORT,
+    BEE_KEYWORD_EXTERN,
+    BEE_KEYWORD_FUNC,
+    BEE_KEYWORD_TYPE,
+    BEE_KEYWORD_LET,
+    BEE_KEYWORD_IF,
+    BEE_KEYWORD_ELIF,
+    BEE_KEYWORD_ELSE,
+    BEE_KEYWORD_WHILE,
+    BEE_KEYWORD_BREAK,
+    BEE_KEYWORD_CONTINUE,
+    BEE_KEYWORD_RETURN,
     BEE_KEYWORD_ASSERT,
     BEE_KEYWORD_TRUE,
     BEE_KEYWORD_FALSE,
@@ -30,6 +43,8 @@ enum bee_keyword_tag {
 
 enum bee_punct_tag {
     BEE_PUNCT_NONE,
+    BEE_PUNCT_EQ_LSH,   // <<=
+    BEE_PUNCT_EQ_RSH,   // >>=
     BEE_PUNCT_D_GT,     // >>
     BEE_PUNCT_D_LT,     // <<
     BEE_PUNCT_D_EQ,     // ==
@@ -39,15 +54,23 @@ enum bee_punct_tag {
     BEE_PUNCT_WALRUS,   // :=
     BEE_PUNCT_D_PIPE,   // ||
     BEE_PUNCT_D_AMP,    // &&
+    BEE_PUNCT_EQ_ADD,   // +=
+    BEE_PUNCT_EQ_SUB,   // +-
+    BEE_PUNCT_EQ_AST,   // *=
+    BEE_PUNCT_EQ_SLASH, // /=
+    BEE_PUNCT_EQ_PCT,   // %=
+    BEE_PUNCT_EQ_AMP,   // &=
+    BEE_PUNCT_EQ_PIPE,  // |=
+    BEE_PUNCT_EQ_CARET, // ^=
     BEE_PUNCT_COLON,    // :
     BEE_PUNCT_GT,       // >
     BEE_PUNCT_LT,       // <
     BEE_PUNCT_PLUS,     // +
     BEE_PUNCT_MINUS,    // -
-    BEE_PUNCT_ASTERISK, // *
+    BEE_PUNCT_AST,      // *
     BEE_PUNCT_SLASH,    // /
-    BEE_PUNCT_PERCENT,  // %
-    BEE_PUNCT_AMPERSAND, // &
+    BEE_PUNCT_PCT,      // %
+    BEE_PUNCT_AMP,      // &
     BEE_PUNCT_CARET,    // ^
     BEE_PUNCT_PIPE,     // |
     BEE_PUNCT_TILDE,    // ~
@@ -55,7 +78,10 @@ enum bee_punct_tag {
     BEE_PUNCT_RPAR,     // )
     BEE_PUNCT_COMMA,    // ,
     BEE_PUNCT_BANG,     // !
-    BEE_PUNCT_DOT,     // .
+    BEE_PUNCT_DOT,      // .
+    BEE_PUNCT_LCBR,     // {
+    BEE_PUNCT_RCBR,     // }
+    BEE_PUNCT_EQ,       // =
     BEE_PUNCT_COUNT
 };
 

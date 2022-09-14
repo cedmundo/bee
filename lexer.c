@@ -6,11 +6,13 @@
 #include <stdbool.h>
 #include <assert.h>
 
-#define TRACKED_PUNCT_TYPES 27
+#define TRACKED_PUNCT_TYPES 40
 static_assert(BEE_PUNCT_COUNT == TRACKED_PUNCT_TYPES,
               "Exhaustive punct string table");
 static const char *puncts_table[] = {
         [BEE_PUNCT_NONE] = NULL,
+        [BEE_PUNCT_EQ_LSH] = "<<=",
+        [BEE_PUNCT_EQ_RSH] = ">>=",
         [BEE_PUNCT_D_GT] = ">>",
         [BEE_PUNCT_D_LT] = "<<",
         [BEE_PUNCT_D_EQ] = "==",
@@ -20,15 +22,23 @@ static const char *puncts_table[] = {
         [BEE_PUNCT_WALRUS] = ":=",
         [BEE_PUNCT_D_PIPE] = "||",
         [BEE_PUNCT_D_AMP] = "&&",
+        [BEE_PUNCT_EQ_ADD] = "+=",
+        [BEE_PUNCT_EQ_SUB] = "-=",
+        [BEE_PUNCT_EQ_AST] = "*=",
+        [BEE_PUNCT_EQ_SLASH] = "/=",
+        [BEE_PUNCT_EQ_PCT] = "%=",
+        [BEE_PUNCT_EQ_AMP] = "&=",
+        [BEE_PUNCT_EQ_PIPE] = "|=",
+        [BEE_PUNCT_EQ_CARET] = "^=",
         [BEE_PUNCT_COLON] = ":",
         [BEE_PUNCT_GT] = ">",
         [BEE_PUNCT_LT] = "<",
         [BEE_PUNCT_PLUS] = "+",
         [BEE_PUNCT_MINUS] = "-",
-        [BEE_PUNCT_ASTERISK] = "*",
+        [BEE_PUNCT_AST] = "*",
         [BEE_PUNCT_SLASH] = "/",
-        [BEE_PUNCT_PERCENT] = "%",
-        [BEE_PUNCT_AMPERSAND] = "&",
+        [BEE_PUNCT_PCT] = "%",
+        [BEE_PUNCT_AMP] = "&",
         [BEE_PUNCT_CARET] = "^",
         [BEE_PUNCT_PIPE] = "|",
         [BEE_PUNCT_TILDE] = "~",
@@ -37,13 +47,29 @@ static const char *puncts_table[] = {
         [BEE_PUNCT_COMMA] = ",",
         [BEE_PUNCT_BANG] = "!",
         [BEE_PUNCT_DOT] = ".",
+        [BEE_PUNCT_LCBR] = "{",
+        [BEE_PUNCT_RCBR] = "}",
+        [BEE_PUNCT_EQ] = "=",
 };
 
-#define TRACKED_KEYWORD_TYPES 4
+#define TRACKED_KEYWORD_TYPES 17
 static_assert(BEE_KEYWORD_COUNT == TRACKED_KEYWORD_TYPES,
               "Exhaustive punct string table");
 static const char *keywords_table[] = {
         [BEE_KEYWORD_NONE] = NULL,
+        [BEE_KEYWORD_MODULE] = "module",
+        [BEE_KEYWORD_IMPORT] = "import",
+        [BEE_KEYWORD_EXTERN] = "extern",
+        [BEE_KEYWORD_FUNC] = "func",
+        [BEE_KEYWORD_TYPE] = "type",
+        [BEE_KEYWORD_LET] = "let",
+        [BEE_KEYWORD_IF] = "if",
+        [BEE_KEYWORD_ELIF] = "elif",
+        [BEE_KEYWORD_ELSE] = "else",
+        [BEE_KEYWORD_WHILE] = "while",
+        [BEE_KEYWORD_BREAK] = "break",
+        [BEE_KEYWORD_CONTINUE] = "continue",
+        [BEE_KEYWORD_RETURN] = "return",
         [BEE_KEYWORD_ASSERT] = "assert",
         [BEE_KEYWORD_TRUE] = "true",
         [BEE_KEYWORD_FALSE] = "false",

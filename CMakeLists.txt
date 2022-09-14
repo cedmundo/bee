@@ -31,3 +31,4 @@ setup_test(parser_call_test common.h common.c errors.h errors.c dynamic_array.h 
 setup_test(parser_unary_test common.h common.c errors.h errors.c dynamic_array.h dynamic_array.c lexer.h lexer.c parser.h parser.c)
 setup_test(parser_binary_test common.h common.c errors.h errors.c dynamic_array.h dynamic_array.c lexer.h lexer.c parser.h parser.c)
 setup_test(parser_type_expr_test common.h common.c errors.h errors.c dynamic_array.h dynamic_array.c lexer.h lexer.c parser.h parser.c)
+setup_test(parser_stmts_test common.h common.c errors.h errors.c dynamic_array.h dynamic_array.c lexer.h lexer.c parser.h parser.c)

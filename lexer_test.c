@@ -223,7 +223,7 @@ static void test_tokenize_punct(void **state) {
     assert_int_equal(token.tag, BEE_TOKEN_TAG_PUNCT);
     assert_int_equal(token.len, 1);
     assert_memory_equal(token.data, "*", token.len);
-    assert_int_equal(token.punct_tag, BEE_PUNCT_ASTERISK);
+    assert_int_equal(token.punct_tag, BEE_PUNCT_AST);
 
     bee_error_clear(&error);
     token = bee_token_next(token, &error);

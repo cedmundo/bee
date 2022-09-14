@@ -56,6 +56,25 @@ enum bee_ast_node_tag {
     BEE_AST_NODE_BIN_ADD_TYPE_EXPR,
     BEE_AST_NODE_BIN_MUL_TYPE_EXPR,
     BEE_AST_NODE_BIN_DECL_TYPE_EXPR,
+    BEE_AST_NODE_STATEMENTS_BLOCK,
+    BEE_AST_NODE_IF_STMT,
+    BEE_AST_NODE_COND_BLOCK_PAIR,
+    BEE_AST_NODE_WHILE_STMT,
+    BEE_AST_NODE_ASSERT_STMT,
+    BEE_AST_NODE_RETURN_STMT,
+    BEE_AST_NODE_CONTINUE_STMT,
+    BEE_AST_NODE_BREAK_STMT,
+    BEE_AST_NODE_ASSIGN_STMT,
+    BEE_AST_NODE_INP_ADD_STMT,
+    BEE_AST_NODE_INP_SUB_STMT,
+    BEE_AST_NODE_INP_MUL_STMT,
+    BEE_AST_NODE_INP_DIV_STMT,
+    BEE_AST_NODE_INP_REM_STMT,
+    BEE_AST_NODE_INP_AND_STMT,
+    BEE_AST_NODE_INP_OR_STMT,
+    BEE_AST_NODE_INP_XOR_STMT,
+    BEE_AST_NODE_INP_LSH_STMT,
+    BEE_AST_NODE_INP_RSH_STMT,
     BEE_AST_NODE_COUNT
 };
 
@@ -88,6 +107,13 @@ void bee_ast_node_free(void *node);
 const char *bee_ast_node_tag_get_name(enum bee_ast_node_tag tag);
 
 struct bee_ast_node *bee_parse_compilation_unit(struct bee_token start_token, struct bee_error *error);
+
+struct bee_ast_node *bee_parse_stmts_block(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_parse_stmt(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_parse_if_stmt(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_parse_while_stmt(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_parse_ctrl_flow_stmt(struct bee_token *rest, struct bee_error *error);
+struct bee_ast_node *bee_parse_call_or_assign_stmt(struct bee_token *rest, struct bee_error *error);
 
 struct bee_ast_node *bee_parse_type_expr(struct bee_token *rest, struct bee_error *error);
 struct bee_ast_node *bee_parse_binary_type_expr(struct bee_token *rest, struct bee_error *error, uint32_t prec);
