@@ -19,3 +19,5 @@ Current milestone version is the v0.1.0, which will add support for:
 * Simple type support (no duck-typing or inferred type support)
 * Effects and effect handlers
 * Lazy map, filter, reduce
+
+Bee goes brr
